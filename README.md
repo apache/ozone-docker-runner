@@ -15,15 +15,35 @@
   limitations under the License.
 -->
 
-# Apache Ozone runner base image
+# Apache Ozone **runner** base image
 
-This is the base image to run Apache Hadoop Ozone in docker containers. This is for test/develop and not for production.
+This is the base image to run Apache Hadoop Ozone in docker containers. This is only for test/develop and not for production.
 
-It doesn't include any Ozone specific jar files or release artifacts just any empty environment which includes all the specific tools to run Apache Hadoop Ozone inside containers.
+The container doesn't include any Ozone specific jar files or release artifacts just an empty environment which includes all the specific tools to run and test Apache Ozone inside containers.
 
-To build it, please use:
+The image is available as [apache/ozone-runner](https://hub.docker.com/r/apache/ozone-runner). Build is managed by Docker Hub.
+
+## Development
+
+To build the image, please use:
 
 ```
-docker build -t apache/ozone-runner
+docker build -t apache/ozone-runner:dev .
 ```
 
+To test it, build [Apache Ozone](https://github.com/apache/ozone):
+
+```
+mvn clean verify -DskipTests -Dskip.npx -DskipShade -Ddocker.ozone-runner.version=dev
+```
+
+And start the compose cluster:
+
+```
+cd hadoop-ozone/dist/target/ozone-*/compose/ozone
+docker-compose up -d
+```
+
+*After merging PR, a new tag should pushed to the repository to create a new image. Use the convention: `YYYYMMDD-N` for tags where N is a daily counter (see the existing tags as an example).
+
+After tag is published (and built by Docker Hub), the used runner version can be updated by modifying the `docker.ozone-runner.version` version in [hadoop-ozone/dist/pom.xml](https://github.com/apache/ozone/blob/master/hadoop-ozone/dist/pom.xml)
