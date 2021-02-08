@@ -31,10 +31,10 @@ To build the image, please use:
 docker build -t apache/ozone-runner:dev .
 ```
 
-To test it with Apache Ozone, do a custom build:
+To test it, build [Apache Ozone](https://github.com/apache/ozone):
 
 ```
-mvn clean install -DskipTests -Dskip.npx -DskipShade -o -Ddocker.ozone-runner.version=dev
+mvn clean verify -DskipTests -Dskip.npx -DskipShade -Ddocker.ozone-runner.version=dev
 ```
 
 And start the compose cluster:
