@@ -59,6 +59,7 @@ COPY --from=1 /usr/local/lib /usr/local/lib/
 
 #For executing inline smoketest
 RUN pip3 install robotframework
+RUN pip3 install boto3
 
 #dumb init for proper init handling
 RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64
