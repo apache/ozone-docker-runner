@@ -22,6 +22,6 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - name: checkout source
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
       - name: build image
         run: docker build -t ghcr.io/$(echo $GITHUB_REPOSITORY | sed 's/docker-//g') .
