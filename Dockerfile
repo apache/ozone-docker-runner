@@ -71,9 +71,9 @@ ADD https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.4/byteman
 RUN chmod o+r /opt/byteman.jar
 
 #async profiler for development profiling
-RUN mkdir -p /opt/profiler && \
-    cd /opt/profiler && \
-    curl -L https://github.com/jvm-profiling-tools/async-profiler/releases/download/v1.5/async-profiler-1.5-linux-x64.tar.gz | tar xvz
+RUN cd /opt && \
+    curl -L https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.0/async-profiler-2.0-linux-x64.tar.gz | tar xvz && \
+    mv async-profiler-2.0-linux-x64 profiler
 
 ENV JAVA_HOME=/usr/lib/jvm/jre/
 ENV LD_LIBRARY_PATH /usr/local/lib
