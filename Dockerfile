@@ -99,8 +99,8 @@ RUN yum install -y fuse
 
 #Make it compatible with any UID/GID (write premission may be missing to /opt/hadoop
 RUN mkdir -p /etc/hadoop && mkdir -p /var/log/hadoop && chmod 1777 /etc/hadoop && chmod 1777 /var/log/hadoop
-ENV OZONE_LOG_DIR=/var/log/hadoop
-ENV OZONE_CONF_DIR=/etc/hadoop
+ENV HADOOP_LOG_DIR=/var/log/hadoop
+ENV HADOOP_CONF_DIR=/etc/hadoop
 RUN mkdir /data && chmod 1777 /data
 
 #default entrypoint (used only if the ozone dir is not bindmounted)
