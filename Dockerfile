@@ -53,6 +53,7 @@ RUN yum install -y \
       sudo \
       wget \
       zlib
+RUN sudo python3 -m pip install --upgrade pip
 
 COPY --from=0 /go/bin/csc /usr/bin/csc
 COPY --from=1 /rocksdb-6.8.1/ldb /usr/local/bin/ldb
