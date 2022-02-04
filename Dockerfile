@@ -14,34 +14,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.17.3-buster
+FROM golang:1.17.6-buster
 RUN GO111MODULE=off go get -u github.com/rexray/gocsi/csc
 
-FROM centos:7.6.1810
+FROM centos:8.4.2105
+RUN sed -i -e 's/^mirrorlist/#&/' -e 's/^#baseurl/baseurl/' -e 's/mirror.centos.org/vault.centos.org/' /etc/yum.repos.d/*.repo
 RUN yum -y install \
-        bzip2-devel \
-        gcc gcc-c++ gcc48-c++ \
-        git \
-        lz4-devel \
-        make \
-        snappy-devel \
-        which \
-        zlib-devel
-RUN git clone https://github.com/gflags/gflags.git \
-      && cd gflags \
-      && git checkout v2.0 \
-      && ./configure && make && make install
-RUN curl -LSs -o zstd-1.1.3.tar.gz https://github.com/facebook/zstd/archive/v1.1.3.tar.gz \
-      && tar zxvf zstd-1.1.3.tar.gz \
-      && cd zstd-1.1.3 \
-      && make && make install
-RUN curl -LSs -o rocksdb-6.8.1.tar.gz https://github.com/facebook/rocksdb/archive/v6.8.1.tar.gz \
-      && tar xzvf rocksdb-6.8.1.tar.gz \
-      && cd rocksdb-6.8.1 \
-      && make ldb
+      gcc gcc-c++ \
+      git \
+      make \
+      which \
+      cmake
+RUN curl -LSs -o gflags-src.tar.gz https://github.com/gflags/gflags/archive/v2.2.2.tar.gz \
+      && tar zxvf gflags-src.tar.gz \
+      && cd gflags-2.2.2 \
+      && mkdir build \
+      && cd build \
+      && cmake .. \
+      && make -j$(nproc) \
+      && make install \
+      && cd ../.. \
+      && rm -rf gflags-2.2.2
+RUN curl -LSs -o zstd-src.tar.gz https://github.com/facebook/zstd/archive/v1.5.2.tar.gz \
+      && tar zxvf zstd-src.tar.gz \
+      && cd zstd-1.5.2 \
+      && make -j$(nproc) \
+      && make install \
+      && cd .. \
+      && rm -rf zstd-1.5.2
+RUN curl -LSs -o rocksdb-src.tar.gz https://github.com/facebook/rocksdb/archive/v6.28.2.tar.gz \
+      && tar xzvf rocksdb-src.tar.gz \
+      && cd rocksdb-6.28.2 \
+      && make -j$(nproc) ldb
 
-FROM centos@sha256:b5e66c4651870a1ad435cd75922fe2cb943c9e973a9673822d1414824a1d0475
-RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+FROM centos:8.4.2105
+RUN sed -i -e 's/^mirrorlist/#&/' -e 's/^#baseurl/baseurl/' -e 's/mirror.centos.org/vault.centos.org/' /etc/yum.repos.d/*.repo
+RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 RUN yum install -y \
       awscli \
       bzip2 \
@@ -53,14 +61,15 @@ RUN yum install -y \
       sudo \
       wget \
       zlib
+# Create python symlink for compatiblity
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
 COPY --from=0 /go/bin/csc /usr/bin/csc
-COPY --from=1 /rocksdb-6.8.1/ldb /usr/local/bin/ldb
+COPY --from=1 /rocksdb-6.28.2/ldb /usr/local/bin/ldb
 COPY --from=1 /usr/local/lib /usr/local/lib/
 
 #For executing inline smoketest
-RUN pip3 install robotframework
-RUN pip3 install boto3
+RUN pip3 install robotframework boto3
 
 #dumb init for proper init handling
 RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64
