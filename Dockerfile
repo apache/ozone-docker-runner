@@ -61,6 +61,7 @@ RUN yum install -y \
       sudo \
       wget \
       zlib
+RUN sudo python3 -m pip install --upgrade pip
 # Create python symlink for compatiblity
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
