@@ -51,7 +51,6 @@ FROM centos:8.4.2105
 RUN sed -i -e 's/^mirrorlist/#&/' -e 's/^#baseurl/baseurl/' -e 's/mirror.centos.org/vault.centos.org/' /etc/yum.repos.d/*.repo
 RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 RUN yum install -y \
-      awscli \
       bzip2 \
       java-11-openjdk \
       jq \
@@ -60,7 +59,8 @@ RUN yum install -y \
       snappy \
       sudo \
       wget \
-      zlib
+      zlib \
+      diffutils
 RUN sudo python3 -m pip install --upgrade pip
 # Create python symlink for compatiblity
 RUN ln -s /usr/bin/python3 /usr/bin/python
@@ -70,7 +70,7 @@ COPY --from=1 /rocksdb-6.28.2/ldb /usr/local/bin/ldb
 COPY --from=1 /usr/local/lib /usr/local/lib/
 
 #For executing inline smoketest
-RUN pip3 install robotframework boto3
+RUN pip3 install awscli robotframework boto3
 
 #dumb init for proper init handling
 RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64
@@ -116,6 +116,9 @@ RUN mkdir /data && chmod 1777 /data
 #default entrypoint (used only if the ozone dir is not bindmounted)
 ADD entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 755 /usr/local/bin/entrypoint.sh
+
+# Fix error when ssh'ing into other containers: System is booting up. Unprivileged users are not permitted to log in yet.
+RUN rm -f /run/nologin
 
 WORKDIR /opt/hadoop
 USER hadoop
