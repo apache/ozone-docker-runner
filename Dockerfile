@@ -17,14 +17,15 @@
 FROM golang:1.17.6-buster
 RUN GO111MODULE=off go get -u github.com/rexray/gocsi/csc
 
-FROM centos:8.4.2105
-RUN sed -i -e 's/^mirrorlist/#&/' -e 's/^#baseurl/baseurl/' -e 's/mirror.centos.org/vault.centos.org/' /etc/yum.repos.d/*.repo
+FROM centos:7.9.2009
+# Required for cmake3 package
+RUN yum -y install epel-release
 RUN yum -y install \
       gcc gcc-c++ \
-      git \
       make \
       which \
-      cmake
+      cmake3
+RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
 RUN curl -LSs -o gflags-src.tar.gz https://github.com/gflags/gflags/archive/v2.2.2.tar.gz \
       && tar zxvf gflags-src.tar.gz \
       && cd gflags-2.2.2 \
@@ -47,9 +48,8 @@ RUN curl -LSs -o rocksdb-src.tar.gz https://github.com/facebook/rocksdb/archive/
       && cd rocksdb-6.28.2 \
       && make -j$(nproc) ldb
 
-FROM centos:8.4.2105
-RUN sed -i -e 's/^mirrorlist/#&/' -e 's/^#baseurl/baseurl/' -e 's/mirror.centos.org/vault.centos.org/' /etc/yum.repos.d/*.repo
-RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+FROM centos:7.9.2009
+RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN yum install -y \
       bzip2 \
       java-11-openjdk \
@@ -62,8 +62,6 @@ RUN yum install -y \
       zlib \
       diffutils
 RUN sudo python3 -m pip install --upgrade pip
-# Create python symlink for compatiblity
-RUN ln -s /usr/bin/python3 /usr/bin/python
 
 COPY --from=0 /go/bin/csc /usr/bin/csc
 COPY --from=1 /rocksdb-6.28.2/ldb /usr/local/bin/ldb
@@ -73,17 +71,17 @@ COPY --from=1 /usr/local/lib /usr/local/lib/
 RUN pip3 install awscli robotframework boto3
 
 #dumb init for proper init handling
-RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64
+RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64
 RUN chmod +x /usr/local/bin/dumb-init
 
 #byteman test for development
-ADD https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.4/byteman-4.0.4.jar /opt/byteman.jar
+ADD https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.9/byteman-4.0.9.jar /opt/byteman.jar
 RUN chmod o+r /opt/byteman.jar
 
 #async profiler for development profiling
 RUN cd /opt && \
-    curl -L https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.0/async-profiler-2.0-linux-x64.tar.gz | tar xvz && \
-    mv async-profiler-2.0-linux-x64 profiler
+    curl -L https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.6/async-profiler-2.6-linux-x64.tar.gz | tar xvz && \
+    mv async-profiler-2.6-linux-x64 profiler
 
 ENV JAVA_HOME=/usr/lib/jvm/jre/
 ENV LD_LIBRARY_PATH /usr/local/lib
@@ -103,7 +101,7 @@ RUN chmod 644 /etc/krb5.conf
 RUN yum install -y krb5-workstation
 
 # CSI / k8s / fuse / goofys dependency
-RUN wget https://github.com/kahing/goofys/releases/download/v0.20.0/goofys -O /usr/bin/goofys
+RUN wget https://github.com/kahing/goofys/releases/download/v0.24.0/goofys -O /usr/bin/goofys
 RUN chmod 755 /usr/bin/goofys
 RUN yum install -y fuse
 
@@ -116,9 +114,6 @@ RUN mkdir /data && chmod 1777 /data
 #default entrypoint (used only if the ozone dir is not bindmounted)
 ADD entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 755 /usr/local/bin/entrypoint.sh
-
-# Fix error when ssh'ing into other containers: System is booting up. Unprivileged users are not permitted to log in yet.
-RUN rm -f /run/nologin
 
 WORKDIR /opt/hadoop
 USER hadoop
