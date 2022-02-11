@@ -14,36 +14,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.17.3-buster
+FROM golang:1.17.6-buster
 RUN GO111MODULE=off go get -u github.com/rexray/gocsi/csc
 
-FROM centos:7.6.1810
+FROM centos:7.9.2009
+# Required for cmake3 package
+RUN yum -y install epel-release
 RUN yum -y install \
-        bzip2-devel \
-        gcc gcc-c++ gcc48-c++ \
-        git \
-        lz4-devel \
-        make \
-        snappy-devel \
-        which \
-        zlib-devel
-RUN git clone https://github.com/gflags/gflags.git \
-      && cd gflags \
-      && git checkout v2.0 \
-      && ./configure && make && make install
-RUN curl -LSs -o zstd-1.1.3.tar.gz https://github.com/facebook/zstd/archive/v1.1.3.tar.gz \
-      && tar zxvf zstd-1.1.3.tar.gz \
-      && cd zstd-1.1.3 \
-      && make && make install
-RUN curl -LSs -o rocksdb-6.8.1.tar.gz https://github.com/facebook/rocksdb/archive/v6.8.1.tar.gz \
-      && tar xzvf rocksdb-6.8.1.tar.gz \
-      && cd rocksdb-6.8.1 \
-      && make ldb
+      gcc gcc-c++ \
+      make \
+      which \
+      cmake3 \
+      perl
+RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
+RUN export GFLAGS_VER=2.2.2 \
+      && curl -LSs -o gflags-src.tar.gz https://github.com/gflags/gflags/archive/v${GFLAGS_VER}.tar.gz \
+      && tar zxvf gflags-src.tar.gz \
+      && rm gflags-src.tar.gz \
+      && cd gflags-${GFLAGS_VER} \
+      && mkdir build \
+      && cd build \
+      && cmake .. \
+      && make -j$(nproc) \
+      && make install \
+      && cd ../.. \
+      && rm -rf gflags-${GFLAGS_VER}
+RUN export ZSTD_VER=1.5.2 \
+      && curl -LSs -o zstd-src.tar.gz https://github.com/facebook/zstd/archive/v${ZSTD_VER}.tar.gz \
+      && tar zxvf zstd-src.tar.gz \
+      && rm zstd-src.tar.gz \
+      && cd zstd-${ZSTD_VER} \
+      && make -j$(nproc) \
+      && make install \
+      && cd .. \
+      && rm -rf zstd-${ZSTD_VER}
+RUN export ROCKSDB_VER=6.28.2 \
+      && curl -LSs -o rocksdb-src.tar.gz https://github.com/facebook/rocksdb/archive/v${ROCKSDB_VER}.tar.gz \
+      && tar xzvf rocksdb-src.tar.gz \
+      && rm rocksdb-src.tar.gz \
+      && mv rocksdb-${ROCKSDB_VER} rocksdb \
+      && cd rocksdb \
+      && make -j$(nproc) ldb
 
-FROM centos@sha256:b5e66c4651870a1ad435cd75922fe2cb943c9e973a9673822d1414824a1d0475
+FROM centos:7.9.2009
 RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN yum install -y \
-      awscli \
       bzip2 \
       java-11-openjdk \
       jq \
@@ -52,29 +67,29 @@ RUN yum install -y \
       snappy \
       sudo \
       wget \
-      zlib
+      zlib \
+      diffutils
 RUN sudo python3 -m pip install --upgrade pip
 
 COPY --from=0 /go/bin/csc /usr/bin/csc
-COPY --from=1 /rocksdb-6.8.1/ldb /usr/local/bin/ldb
+COPY --from=1 /rocksdb/ldb /usr/local/bin/ldb
 COPY --from=1 /usr/local/lib /usr/local/lib/
 
 #For executing inline smoketest
-RUN pip3 install robotframework
-RUN pip3 install boto3
+RUN pip3 install awscli robotframework boto3
 
 #dumb init for proper init handling
-RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64
+RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64
 RUN chmod +x /usr/local/bin/dumb-init
 
 #byteman test for development
-ADD https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.4/byteman-4.0.4.jar /opt/byteman.jar
+ADD https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.9/byteman-4.0.9.jar /opt/byteman.jar
 RUN chmod o+r /opt/byteman.jar
 
 #async profiler for development profiling
 RUN cd /opt && \
-    curl -L https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.0/async-profiler-2.0-linux-x64.tar.gz | tar xvz && \
-    mv async-profiler-2.0-linux-x64 profiler
+    curl -L https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.6/async-profiler-2.6-linux-x64.tar.gz | tar xvz && \
+    mv async-profiler-2.6-linux-x64 profiler
 
 ENV JAVA_HOME=/usr/lib/jvm/jre/
 ENV LD_LIBRARY_PATH /usr/local/lib
@@ -87,24 +102,24 @@ RUN echo "hadoop ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN chown hadoop /opt
 
-#Be prepared for kerbebrizzed cluster
+# Prep for Kerberized cluster
 RUN mkdir -p /etc/security/keytabs && chmod -R a+wr /etc/security/keytabs 
 ADD krb5.conf /etc/
 RUN chmod 644 /etc/krb5.conf
 RUN yum install -y krb5-workstation
 
 # CSI / k8s / fuse / goofys dependency
-RUN wget https://github.com/kahing/goofys/releases/download/v0.20.0/goofys -O /usr/bin/goofys
+RUN wget https://github.com/kahing/goofys/releases/download/v0.24.0/goofys -O /usr/bin/goofys
 RUN chmod 755 /usr/bin/goofys
 RUN yum install -y fuse
 
-#Make it compatible with any UID/GID (write premission may be missing to /opt/hadoop
+# Create hadoop and data directories. Grant all permission to all on them
 RUN mkdir -p /etc/hadoop && mkdir -p /var/log/hadoop && chmod 1777 /etc/hadoop && chmod 1777 /var/log/hadoop
 ENV OZONE_LOG_DIR=/var/log/hadoop
 ENV OZONE_CONF_DIR=/etc/hadoop
 RUN mkdir /data && chmod 1777 /data
 
-#default entrypoint (used only if the ozone dir is not bindmounted)
+# Set default entrypoint (used only if the ozone dir is not bind mounted)
 ADD entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 755 /usr/local/bin/entrypoint.sh
 
