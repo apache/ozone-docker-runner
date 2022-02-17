@@ -15,7 +15,7 @@
 # limitations under the License.
 
 FROM golang:1.17.7-buster AS go1
-RUN GO111MODULE=off go get -u github.com/rexray/gocsi/csc
+RUN go install github.com/rexray/gocsi/csc@latest
 
 FROM golang:1.17.7-buster AS go2
 # Compile latest goofys for arm64 if necessary, which doesn't have a released binary
