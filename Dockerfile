@@ -98,7 +98,7 @@ RUN set -eux ; \
             ;; \
         aarch64) \
             url='https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_aarch64'; \
-            sha256='c2b29d578ca70709c41141af37bf3816d21cb6624a46105850b74b336dfe22cd'; \
+            sha256='b7d648f97154a99c539b63c55979cd29f005f88430fb383007fe3458340b795e'; \
             ;; \
         *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
     esac; \
