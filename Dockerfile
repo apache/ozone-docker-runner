@@ -60,7 +60,7 @@ FROM centos:7.9.2009
 RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN yum install -y \
       bzip2 \
-      java-11-openjdk \
+      java-11-openjdk-devel \
       jq \
       nmap-ncat \
       python3 python3-pip \
