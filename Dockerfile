@@ -24,8 +24,8 @@ RUN set -eux ; \
     if [ ${ARCH} = "aarch64" ]; then \
         git clone https://github.com/kahing/goofys.git ; \
         cd goofys ; \
-        go env GOOS GOARCH ; \
-        GOOS=linux GOARCH=arm64 go build ; \
+        git checkout 08534b2 ; \
+        go build ; \
         mv goofys /go/bin/ ; \
     elif [ ${ARCH} = "x86_64" ]; then \
         curl -L https://github.com/kahing/goofys/releases/download/v0.24.0/goofys -o /go/bin/goofys ; \
