@@ -14,20 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.17.7-buster AS go1
+FROM golang:1.17.8-alpine AS go
 RUN go install github.com/rexray/gocsi/csc@latest
-
-FROM golang:1.17.7-buster AS go2
 # Compile latest goofys for arm64 if necessary, which doesn't have a released binary
 RUN set -eux ; \
     ARCH="$(arch)"; \
     if [ ${ARCH} = "aarch64" ]; then \
+        apk add --update git ; \
         git clone https://github.com/kahing/goofys.git ; \
         cd goofys ; \
         git checkout 08534b2 ; \
         go build ; \
         mv goofys /go/bin/ ; \
     elif [ ${ARCH} = "x86_64" ]; then \
+        apk add --update curl ; \
         curl -L https://github.com/kahing/goofys/releases/download/v0.24.0/goofys -o /go/bin/goofys ; \
     else \
         echo "Unsupported architecture: ${ARCH}"; \
@@ -35,15 +35,19 @@ RUN set -eux ; \
     fi
 
 FROM centos:7.9.2009 AS builder
-# Required for cmake3 package
-RUN yum -y install epel-release
-RUN yum -y install \
-      gcc gcc-c++ \
+# Required for cmake3 and gcc 10
+RUN yum -y install epel-release centos-release-scl
+RUN set -eux ; \
+    yum -y install \
+      devtoolset-10-gcc-c++ \
       make \
       which \
       cmake3 \
-      perl
+      perl ; \
+    yum clean all
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
+# Add gcc 10 bin path
+ENV PATH=/opt/rh/devtoolset-10/root/usr/bin:$PATH
 RUN export GFLAGS_VER=2.2.2 \
       && curl -LSs https://github.com/gflags/gflags/archive/v${GFLAGS_VER}.tar.gz | tar zxv \
       && cd gflags-${GFLAGS_VER} \
@@ -61,15 +65,19 @@ RUN export ZSTD_VER=1.5.2 \
       && make install \
       && cd .. \
       && rm -r zstd-${ZSTD_VER}
-RUN export ROCKSDB_VER=6.28.2 \
+RUN export ROCKSDB_VER=7.0.3 \
       && curl -LSs https://github.com/facebook/rocksdb/archive/v${ROCKSDB_VER}.tar.gz | tar zxv \
       && mv rocksdb-${ROCKSDB_VER} rocksdb \
       && cd rocksdb \
-      && make -j$(nproc) ldb
+      && make -j$(nproc) ldb \
+      && mv ldb .. \
+      && cd .. \
+      && rm -r rocksdb
 
 FROM centos:7.9.2009
 RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-RUN yum install -y \
+RUN set -eux ; \
+    yum install -y \
       bzip2 \
       java-11-openjdk-devel \
       jq \
@@ -78,15 +86,20 @@ RUN yum install -y \
       snappy \
       sudo \
       zlib \
-      diffutils
+      diffutils \
+      krb5-workstation \
+      fuse ; \
+    yum clean all
 RUN sudo python3 -m pip install --upgrade pip
 
-COPY --from=go1 /go/bin/csc /usr/bin/csc
-COPY --from=builder /rocksdb/ldb /usr/local/bin/ldb
+COPY --from=go /go/bin/csc /usr/bin/csc
+COPY --from=builder /ldb /usr/local/bin/ldb
 COPY --from=builder /usr/local/lib /usr/local/lib/
 
 #For executing inline smoketest
-RUN pip3 install awscli robotframework boto3
+RUN set -eux ; \
+    pip3 install awscli robotframework boto3 ; \
+    rm -r ~/.cache/pip
 
 #dumb init for proper init handling
 RUN set -eux ; \
@@ -108,7 +121,7 @@ RUN set -eux ; \
     mv dumb-init /usr/local/bin/dumb-init
 
 #byteman test for development
-ADD https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.9/byteman-4.0.9.jar /opt/byteman.jar
+ADD https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.18/byteman-4.0.18.jar /opt/byteman.jar
 RUN chmod o+r /opt/byteman.jar
 
 #async profiler for development profiling
@@ -137,12 +150,9 @@ RUN chown hadoop /opt
 RUN mkdir -p /etc/security/keytabs && chmod -R a+wr /etc/security/keytabs 
 ADD krb5.conf /etc/
 RUN chmod 644 /etc/krb5.conf
-RUN yum install -y krb5-workstation
 
 # CSI / k8s / fuse / goofys dependency
-COPY --from=go2 /go/bin/goofys /usr/bin/goofys
-RUN chmod 755 /usr/bin/goofys
-RUN yum install -y fuse
+COPY --from=go --chmod=755 /go/bin/goofys /usr/bin/goofys
 
 # Create hadoop and data directories. Grant all permission to all on them
 RUN mkdir -p /etc/hadoop && mkdir -p /var/log/hadoop && chmod 1777 /etc/hadoop && chmod 1777 /var/log/hadoop
