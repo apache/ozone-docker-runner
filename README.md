@@ -28,7 +28,7 @@ The image is available as [apache/ozone-runner](https://hub.docker.com/r/apache/
 To build the image, please use:
 
 ```
-docker build -t apache/ozone-runner:dev .
+DOCKER_BUILDKIT=1 docker build -t apache/ozone-runner:dev .
 ```
 
 To test it, build [Apache Ozone](https://github.com/apache/ozone):
