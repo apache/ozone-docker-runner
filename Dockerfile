@@ -14,20 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.17.8-alpine AS go
+FROM golang:1.17.8-buster AS go
 RUN go install github.com/rexray/gocsi/csc@latest
 # Compile latest goofys for arm64 if necessary, which doesn't have a released binary
 RUN set -eux ; \
     ARCH="$(arch)"; \
     if [ ${ARCH} = "aarch64" ]; then \
-        apk add --update git ; \
         git clone https://github.com/kahing/goofys.git ; \
         cd goofys ; \
         git checkout 08534b2 ; \
         go build ; \
         mv goofys /go/bin/ ; \
     elif [ ${ARCH} = "x86_64" ]; then \
-        apk add --update curl ; \
         curl -L https://github.com/kahing/goofys/releases/download/v0.24.0/goofys -o /go/bin/goofys ; \
     else \
         echo "Unsupported architecture: ${ARCH}"; \
