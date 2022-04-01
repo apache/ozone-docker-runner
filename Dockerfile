@@ -63,7 +63,7 @@ RUN export ZSTD_VER=1.5.2 \
       && make install \
       && cd .. \
       && rm -r zstd-${ZSTD_VER}
-RUN export ROCKSDB_VER=7.0.3 \
+RUN export ROCKSDB_VER=7.0.4 \
       && curl -LSs https://github.com/facebook/rocksdb/archive/v${ROCKSDB_VER}.tar.gz | tar zxv \
       && mv rocksdb-${ROCKSDB_VER} rocksdb \
       && cd rocksdb \
