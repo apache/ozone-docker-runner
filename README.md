@@ -28,7 +28,7 @@ The image is available as [apache/ozone-runner](https://hub.docker.com/r/apache/
 To build the image, please use:
 
 ```
-docker build -t apache/ozone-runner:dev .
+DOCKER_BUILDKIT=1 docker build -t apache/ozone-runner:dev .
 ```
 
 To test it, build [Apache Ozone](https://github.com/apache/ozone):
@@ -47,3 +47,15 @@ docker-compose up -d
 *After merging PR, a new tag should pushed to the repository to create a new image. Use the convention: `YYYYMMDD-N` for tags where N is a daily counter (see the existing tags as an example).
 
 After tag is published (and built by Docker Hub), the used runner version can be updated by modifying the `docker.ozone-runner.version` version in [hadoop-ozone/dist/pom.xml](https://github.com/apache/ozone/blob/master/hadoop-ozone/dist/pom.xml)
+
+## Building multi-architecture images
+
+To build images with multiple architectures, use `docker buildx`.
+
+For example, to build images for both `linux/amd64` and `linux/arm64`, run:
+
+```bash
+docker buildx build --platform linux/amd64,linux/arm64 -t apache/ozone-runner:dev . --progress=plain
+```
+
+It might be slow when building the non-native architecture image due to QEMU emulation.
