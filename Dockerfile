@@ -172,6 +172,10 @@ RUN groupadd --gid 1008 testuser2
 RUN useradd --uid 1008 testuser2 --gid 1008 --home /opt/testuser2
 RUN chmod 755 /opt/testuser2
 
+RUN groupadd --gid 1009 httpfs
+RUN useradd --uid 1009 httpfs --gid 1009 --home /opt/httpfs
+RUN chmod 755 /opt/httpfs
+
 # Prep for Kerberized cluster
 RUN mkdir -p /etc/security/keytabs && chmod -R a+wr /etc/security/keytabs 
 ADD krb5.conf /etc/
