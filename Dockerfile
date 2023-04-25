@@ -86,7 +86,8 @@ RUN set -eux ; \
       zlib \
       diffutils \
       krb5-workstation \
-      fuse ; \
+      fuse \
+      openssl ; \
     yum clean all
 RUN sudo python3 -m pip install --upgrade pip
 
