@@ -19,9 +19,9 @@ on:
 jobs:
   build:
     name: build and deploy
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: checkout source
         uses: actions/checkout@v2
       - name: build image
-        run: DOCKER_BUILDKIT=1 docker build -t ghcr.io/$(echo $GITHUB_REPOSITORY | sed 's/docker-//g') .
+        run: DOCKER_BUILDKIT=1 docker build -t ghcr.io/$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]' | sed 's/docker-//g') .
