@@ -80,6 +80,7 @@ RUN set -eux ; \
       java-11-openjdk-devel \
       jq \
       nmap-ncat \
+      openssl \
       python3 python3-pip \
       snappy \
       sudo \
