@@ -37,12 +37,12 @@ FROM centos:7.9.2009 AS builder
 RUN yum -y install epel-release centos-release-scl
 RUN set -eux ; \
     yum -y install \
+      cmake3 \
       devtoolset-10-gcc-c++ \
       make \
+      perl \
       which \
-      cmake3 \
-      perl ; \
-    yum clean all
+    && yum clean all
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
 # Add gcc 10 bin path
 ENV PATH=/opt/rh/devtoolset-10/root/usr/bin:$PATH
@@ -77,18 +77,20 @@ RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.
 RUN set -eux ; \
     yum install -y \
       bzip2 \
+      diffutils \
+      fuse \
       java-11-openjdk-devel \
       jq \
+      krb5-workstation \
+      lsof \
+      net-tools \
       nmap-ncat \
       openssl \
       python3 python3-pip \
       snappy \
       sudo \
       zlib \
-      diffutils \
-      krb5-workstation \
-      fuse ; \
-    yum clean all
+    && yum clean all
 RUN sudo python3 -m pip install --upgrade pip
 
 COPY --from=go /go/bin/csc /usr/bin/csc
