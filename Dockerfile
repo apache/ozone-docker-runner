@@ -82,6 +82,8 @@ RUN set -eux ; \
       java-11-openjdk-devel \
       jq \
       krb5-workstation \
+      lsof \
+      net-tools \
       nmap-ncat \
       openssl \
       python3 python3-pip \
