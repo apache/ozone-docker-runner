@@ -79,7 +79,6 @@ RUN set -eux ; \
       bzip2 \
       diffutils \
       fuse \
-      java-11-openjdk-devel \
       jq \
       krb5-workstation \
       lsof \
@@ -136,9 +135,28 @@ RUN set -eux ; \
     curl -L ${url} | tar xvz ; \
     mv async-profiler-* /opt/profiler
 
-ENV JAVA_HOME=/usr/lib/jvm/jre/
+# OpenJDK 17
+RUN set -eux ; \
+    ARCH="$(arch)"; \
+    case "${ARCH}" in \
+        x86_64) \
+            url='https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz'; \
+            sha256='0022753d0cceecacdd3a795dd4cea2bd7ffdf9dc06e22ffd1be98411742fbb44'; \
+            ;; \
+        aarch64) \
+            url='https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-aarch64_bin.tar.gz'; \
+            sha256='13bfd976acf8803f862e82c7113fb0e9311ca5458b1decaef8a09ffd91119fa4'; \
+            ;; \
+        *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
+    esac && \
+    curl -L ${url} -o openjdk.tar.gz && \
+    echo "${sha256} *openjdk.tar.gz" | sha256sum -c - && \
+    tar xzvf openjdk.tar.gz -C /usr/local && \
+    rm -f openjdk.tar.gz
+
+ENV JAVA_HOME=/usr/local/jdk-17.0.2
 ENV LD_LIBRARY_PATH=/usr/local/lib
-ENV PATH=/opt/hadoop/libexec:$PATH:/opt/hadoop/bin
+ENV PATH=/opt/hadoop/libexec:$PATH:$JAVA_HOME/bin:/opt/hadoop/bin
 
 RUN groupadd --gid 1000 hadoop
 RUN useradd --uid 1000 hadoop --gid 1000 --home /opt/hadoop
