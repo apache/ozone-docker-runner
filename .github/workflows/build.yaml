@@ -12,16 +12,89 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-name: build
+name: CI
 on:
-  - push
-  - pull_request
+  push:
+  pull_request:
+    types: [opened, ready_for_review, synchronize]
+env:
+  OZONE_RUNNER_IMAGE: ${{ github.repository_owner }}/ozone-runner
+  OZONE_RUNNER_VERSION: ci-${{ github.run_number }}
+  OZONE_VERSION: 1.4.0
+  # Test push only in forks;
+  # after push in apache, the image should be tested with complete Ozone CI.
+  # This condition is duplicated in 'acceptance' job's 'if' condition (cannot use env context there).
+  NEEDS_TEST: ${{ github.repository_owner != 'apache' || github.event_name == 'pull_request' }}
 jobs:
-  build:
-    name: build and deploy
+  build-image:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout source
+      - name: Checkout source
         uses: actions/checkout@v4
-      - name: build image
-        run: DOCKER_BUILDKIT=1 docker build -t ghcr.io/$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]' | sed 's/docker-//g') .
+      - name: Build image
+        run: |
+          tag=apache/ozone-runner:20240316-jdk17-1
+          DOCKER_BUILDKIT=1 docker build -t $tag . || docker image pull $tag # temporary hack until build is fixed
+          docker image tag $tag "$OZONE_RUNNER_IMAGE":"$OZONE_RUNNER_VERSION"
+          docker image ls
+      - name: Save image as tarball
+        if: ${{ env.NEEDS_TEST }}
+        run: |
+          docker image save -o image.tar "$OZONE_RUNNER_IMAGE":"$OZONE_RUNNER_VERSION"
+          ls -lh image.tar
+      - name: Upload image for testing
+        uses: actions/upload-artifact@v4
+        if: ${{ env.NEEDS_TEST }}
+        with:
+          name: image
+          path: image.tar
+          retention-days: 1
+  acceptance:
+    runs-on: ubuntu-20.04
+    if: ${{ github.repository_owner != 'apache' || github.event_name == 'pull_request' }}
+    needs: build-image
+    strategy:
+      matrix:
+        suite:
+          - HA-unsecure # can add more later
+      fail-fast: false
+    steps:
+      - name: Download Ozone ${{ env.OZONE_VERSION }}
+        run: |
+          curl -LSs -o ozone-src.tar.gz https://dlcdn.apache.org/ozone/${OZONE_VERSION}/ozone-${OZONE_VERSION}-src.tar.gz
+          curl -LSs -o ozone.tar.gz https://dlcdn.apache.org/ozone/${OZONE_VERSION}/ozone-${OZONE_VERSION}.tar.gz
+          tar -xvz --strip-components 1 -f ozone-src.tar.gz
+          mkdir -p hadoop-ozone/dist/target
+          tar -xvz -C hadoop-ozone/dist/target -f ozone.tar.gz
+          sudo chmod -R a+rwX hadoop-ozone/dist/target
+          rm -f ozone.tar.gz ozone-src.tar.gz
+      - name: Download image
+        uses: actions/download-artifact@v4
+        with:
+          name: image
+      - name: Load image
+        run: |
+          ls -lh image.tar
+          docker image load -i image.tar
+          docker image ls
+          rm -f image.tar
+      - name: Execute tests
+        run: |
+          pushd hadoop-ozone/dist/target/ozone-*
+          sudo mkdir .aws && sudo chmod 777 .aws && sudo chown 1000 .aws
+          popd
+          ./hadoop-ozone/dev-support/checks/acceptance.sh
+        env:
+          OZONE_ACCEPTANCE_SUITE: ${{ matrix.suite }}
+          OZONE_VOLUME_OWNER: 1000
+        continue-on-error: true
+      - name: Summary of failures
+        run: hadoop-ozone/dev-support/checks/_summary.sh target/${{ github.job }}/summary.txt
+        if: ${{ !cancelled() }}
+      - name: Archive build results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: acceptance-${{ matrix.suite }}
+          path: target/acceptance
+        continue-on-error: true
