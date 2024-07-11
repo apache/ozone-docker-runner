@@ -32,20 +32,25 @@ RUN set -eux ; \
         exit 1 ; \
     fi
 
-FROM centos:7.9.2009 AS builder
+FROM rockylinux:8.9 AS builder
 # Required for cmake3 and gcc 10
-RUN yum -y install epel-release centos-release-scl
+RUN dnf install -y epel-release
 RUN set -eux ; \
-    yum -y install \
+    dnf -y install \
       cmake3 \
-      devtoolset-10-gcc-c++ \
+      gcc-toolset-10 \
       make \
       perl \
       which \
-    && yum clean all
-RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
+    && dnf clean all
+RUN [ -e /usr/bin/cmake ] || ln -s /usr/bin/cmake3 /usr/bin/cmake
 # Add gcc 10 bin path
-ENV PATH=/opt/rh/devtoolset-10/root/usr/bin:$PATH
+# Set environment variables for the C and C++ compilers
+ENV CMAKE_COMMAND cmake3
+ENV CXX /opt/rh/gcc-toolset-10/root/usr/bin/g++
+ENV CC /opt/rh/gcc-toolset-10/root/usr/bin/gcc
+
+# Now proceed with other build steps...
 RUN export GFLAGS_VER=2.2.2 \
       && curl -LSs https://github.com/gflags/gflags/archive/v${GFLAGS_VER}.tar.gz | tar zxv \
       && cd gflags-${GFLAGS_VER} \
@@ -56,6 +61,7 @@ RUN export GFLAGS_VER=2.2.2 \
       && make install \
       && cd ../.. \
       && rm -r gflags-${GFLAGS_VER}
+
 RUN export ZSTD_VER=1.5.2 \
       && curl -LSs https://github.com/facebook/zstd/archive/v${ZSTD_VER}.tar.gz | tar zxv \
       && cd zstd-${ZSTD_VER} \
@@ -63,6 +69,7 @@ RUN export ZSTD_VER=1.5.2 \
       && make install \
       && cd .. \
       && rm -r zstd-${ZSTD_VER}
+
 RUN export ROCKSDB_VER=7.7.3 \
       && curl -LSs https://github.com/facebook/rocksdb/archive/v${ROCKSDB_VER}.tar.gz | tar zxv \
       && mv rocksdb-${ROCKSDB_VER} rocksdb \
@@ -72,10 +79,10 @@ RUN export ROCKSDB_VER=7.7.3 \
       && cd .. \
       && rm -r rocksdb
 
-FROM centos:7.9.2009
+FROM rockylinux:8.9
 RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN set -eux ; \
-    yum install -y \
+    dnf install -y \
       bzip2 \
       diffutils \
       fuse \
@@ -89,7 +96,7 @@ RUN set -eux ; \
       snappy \
       sudo \
       zlib \
-    && yum clean all
+    && dnf clean all
 RUN sudo python3 -m pip install --upgrade pip
 
 COPY --from=go /go/bin/csc /usr/bin/csc
