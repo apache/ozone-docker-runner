@@ -35,6 +35,8 @@ jobs:
         run: |
           tag="$OZONE_RUNNER_IMAGE":"$OZONE_RUNNER_VERSION"
           DOCKER_BUILDKIT=1 docker build -t $tag .
+      - name: List images
+        run: |
           docker image ls
       - name: Save image as tarball
         if: ${{ env.NEEDS_TEST }}
@@ -75,8 +77,10 @@ jobs:
         run: |
           ls -lh image.tar
           docker image load -i image.tar
-          docker image ls
           rm -f image.tar
+      - name: List images
+        run: |
+          docker image ls
       - name: Execute tests
         run: |
           pushd hadoop-ozone/dist/target/ozone-*
