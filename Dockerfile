@@ -164,6 +164,9 @@ RUN set -eux ; \
     rm -f openjdk.tar.gz
 
 ENV JAVA_HOME=/usr/local/jdk-17.0.2
+# compatibility with Ozone 1.4.0 and earlier compose env.
+RUN mkdir -p /usr/lib/jvm && ln -s $JAVA_HOME /usr/lib/jvm/jre
+
 ENV LD_LIBRARY_PATH=/usr/local/lib
 ENV PATH=/opt/hadoop/libexec:$PATH:$JAVA_HOME/bin:/opt/hadoop/bin
 
