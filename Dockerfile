@@ -93,6 +93,7 @@ RUN set -eux ; \
       net-tools \
       nmap-ncat \
       openssl \
+      procps \
       python3 python3-pip \
       snappy \
       sudo \
