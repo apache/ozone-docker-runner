@@ -18,6 +18,8 @@ github:
   labels:
     - ozone
     - container
+  autolink_jira:
+    - HDDS
   enabled_merge_buttons:
     squash:  true
     merge:   false
