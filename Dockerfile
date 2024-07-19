@@ -33,7 +33,6 @@ RUN set -eux ; \
     fi
 
 FROM rockylinux:8.9
-RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN set -eux ; \
     dnf install -y \
       bzip2 \
