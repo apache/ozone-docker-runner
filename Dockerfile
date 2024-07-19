@@ -121,44 +121,17 @@ RUN mkdir -p /usr/lib/jvm && ln -s $JAVA_HOME /usr/lib/jvm/jre
 ENV LD_LIBRARY_PATH=/usr/local/lib
 ENV PATH=/opt/hadoop/libexec:$PATH:$JAVA_HOME/bin:/opt/hadoop/bin
 
-RUN groupadd --gid 1000 hadoop
-RUN useradd --uid 1000 hadoop --gid 1000 --home /opt/hadoop
-RUN chmod 755 /opt/hadoop
+RUN id=1000; \
+    for u in hadoop om dn scm s3g recon testuser testuser2 httpfs; do \
+      groupadd --gid $id $u \
+      && useradd --uid $id $u --gid $id --home /opt/$u \
+      && mkdir /opt/$u \
+      && chmod 755 /opt/$u; \
+      id=$(( id + 1 )); \
+    done
+
 RUN echo "hadoop ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-
 RUN chown hadoop /opt
-
-RUN groupadd --gid 1001 om
-RUN useradd --uid 1001 om --gid 1001 --home /opt/om
-RUN chmod 755 /opt/om
-
-RUN groupadd --gid 1002 dn
-RUN useradd --uid 1002 dn --gid 1002 --home /opt/dn
-RUN chmod 755 /opt/dn
-
-RUN groupadd --gid 1003 scm
-RUN useradd --uid 1003 scm --gid 1003 --home /opt/scm
-RUN chmod 755 /opt/scm
-
-RUN groupadd --gid 1004 s3g
-RUN useradd --uid 1004 s3g --gid 1004 --home /opt/s3g
-RUN chmod 755 /opt/s3g
-
-RUN groupadd --gid 1006 recon
-RUN useradd --uid 1006 recon --gid 1006 --home /opt/recon
-RUN chmod 755 /opt/recon
-
-RUN groupadd --gid 1007 testuser
-RUN useradd --uid 1007 testuser --gid 1007 --home /opt/testuser
-RUN chmod 755 /opt/testuser
-
-RUN groupadd --gid 1008 testuser2
-RUN useradd --uid 1008 testuser2 --gid 1008 --home /opt/testuser2
-RUN chmod 755 /opt/testuser2
-
-RUN groupadd --gid 1009 httpfs
-RUN useradd --uid 1009 httpfs --gid 1009 --home /opt/httpfs
-RUN chmod 755 /opt/httpfs
 
 # Prep for Kerberized cluster
 RUN mkdir -p /etc/security/keytabs && chmod -R a+wr /etc/security/keytabs 
