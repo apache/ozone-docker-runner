@@ -81,8 +81,8 @@ RUN set -eux ; \
     mv dumb-init /usr/local/bin/dumb-init
 
 #byteman test for development
-ADD https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.18/byteman-4.0.18.jar /opt/byteman.jar
-RUN chmod o+r /opt/byteman.jar
+RUN curl -Lo /opt/byteman.jar https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.23/byteman-4.0.23.jar \
+    && chmod o+r /opt/byteman.jar
 
 #async profiler for development profiling
 RUN set -eux ; \
