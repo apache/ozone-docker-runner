@@ -135,8 +135,7 @@ RUN chown hadoop /opt
 
 # Prep for Kerberized cluster
 RUN mkdir -p /etc/security/keytabs && chmod -R a+wr /etc/security/keytabs 
-ADD krb5.conf /etc/
-RUN chmod 644 /etc/krb5.conf
+COPY --chmod=644 krb5.conf /etc/
 
 # CSI / k8s / fuse / goofys dependency
 COPY --from=go --chmod=755 /go/bin/goofys /usr/bin/goofys
@@ -148,8 +147,7 @@ ENV OZONE_CONF_DIR=/etc/hadoop
 RUN mkdir /data && chmod 1777 /data
 
 # Set default entrypoint (used only if the ozone dir is not bind mounted)
-ADD entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod 755 /usr/local/bin/entrypoint.sh
+COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
 WORKDIR /opt/hadoop
 USER hadoop
