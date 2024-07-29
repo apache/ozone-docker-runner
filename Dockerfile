@@ -32,55 +32,7 @@ RUN set -eux ; \
         exit 1 ; \
     fi
 
-FROM rockylinux:8.9 AS builder
-# Required for cmake3 and gcc 10
-RUN dnf install -y epel-release
-RUN set -eux ; \
-    dnf -y install \
-      cmake3 \
-      gcc-toolset-10 \
-      make \
-      perl \
-      which \
-    && dnf clean all
-RUN [ -e /usr/bin/cmake ] || ln -s /usr/bin/cmake3 /usr/bin/cmake
-# Add gcc 10 bin path
-# Set environment variables for the C and C++ compilers
-ENV CMAKE_COMMAND cmake3
-ENV CXX /opt/rh/gcc-toolset-10/root/usr/bin/g++
-ENV CC /opt/rh/gcc-toolset-10/root/usr/bin/gcc
-
-# Now proceed with other build steps...
-RUN export GFLAGS_VER=2.2.2 \
-      && curl -LSs https://github.com/gflags/gflags/archive/v${GFLAGS_VER}.tar.gz | tar zxv \
-      && cd gflags-${GFLAGS_VER} \
-      && mkdir build \
-      && cd build \
-      && cmake .. \
-      && make -j$(nproc) \
-      && make install \
-      && cd ../.. \
-      && rm -r gflags-${GFLAGS_VER}
-
-RUN export ZSTD_VER=1.5.2 \
-      && curl -LSs https://github.com/facebook/zstd/archive/v${ZSTD_VER}.tar.gz | tar zxv \
-      && cd zstd-${ZSTD_VER} \
-      && make -j$(nproc) \
-      && make install \
-      && cd .. \
-      && rm -r zstd-${ZSTD_VER}
-
-RUN export ROCKSDB_VER=7.7.3 \
-      && curl -LSs https://github.com/facebook/rocksdb/archive/v${ROCKSDB_VER}.tar.gz | tar zxv \
-      && mv rocksdb-${ROCKSDB_VER} rocksdb \
-      && cd rocksdb \
-      && make -j$(nproc) ldb \
-      && mv ldb .. \
-      && cd .. \
-      && rm -r rocksdb
-
 FROM rockylinux:8.9
-RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 RUN set -eux ; \
     dnf install -y \
       bzip2 \
@@ -103,8 +55,6 @@ RUN set -eux ; \
 RUN sudo python3 -m pip install --upgrade pip
 
 COPY --from=go /go/bin/csc /usr/bin/csc
-COPY --from=builder /ldb /usr/local/bin/ldb
-COPY --from=builder /usr/local/lib /usr/local/lib/
 
 #For executing inline smoketest
 RUN set -eux ; \
@@ -131,8 +81,8 @@ RUN set -eux ; \
     mv dumb-init /usr/local/bin/dumb-init
 
 #byteman test for development
-ADD https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.18/byteman-4.0.18.jar /opt/byteman.jar
-RUN chmod o+r /opt/byteman.jar
+RUN curl -Lo /opt/byteman.jar https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.23/byteman-4.0.23.jar \
+    && chmod o+r /opt/byteman.jar
 
 #async profiler for development profiling
 RUN set -eux ; \
@@ -171,49 +121,21 @@ RUN mkdir -p /usr/lib/jvm && ln -s $JAVA_HOME /usr/lib/jvm/jre
 ENV LD_LIBRARY_PATH=/usr/local/lib
 ENV PATH=/opt/hadoop/libexec:$PATH:$JAVA_HOME/bin:/opt/hadoop/bin
 
-RUN groupadd --gid 1000 hadoop
-RUN useradd --uid 1000 hadoop --gid 1000 --home /opt/hadoop
-RUN chmod 755 /opt/hadoop
+RUN id=1000; \
+    for u in hadoop om dn scm s3g recon testuser testuser2 httpfs; do \
+      groupadd --gid $id $u \
+      && useradd --uid $id $u --gid $id --home /opt/$u \
+      && mkdir /opt/$u \
+      && chmod 755 /opt/$u; \
+      id=$(( id + 1 )); \
+    done
+
 RUN echo "hadoop ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-
 RUN chown hadoop /opt
-
-RUN groupadd --gid 1001 om
-RUN useradd --uid 1001 om --gid 1001 --home /opt/om
-RUN chmod 755 /opt/om
-
-RUN groupadd --gid 1002 dn
-RUN useradd --uid 1002 dn --gid 1002 --home /opt/dn
-RUN chmod 755 /opt/dn
-
-RUN groupadd --gid 1003 scm
-RUN useradd --uid 1003 scm --gid 1003 --home /opt/scm
-RUN chmod 755 /opt/scm
-
-RUN groupadd --gid 1004 s3g
-RUN useradd --uid 1004 s3g --gid 1004 --home /opt/s3g
-RUN chmod 755 /opt/s3g
-
-RUN groupadd --gid 1006 recon
-RUN useradd --uid 1006 recon --gid 1006 --home /opt/recon
-RUN chmod 755 /opt/recon
-
-RUN groupadd --gid 1007 testuser
-RUN useradd --uid 1007 testuser --gid 1007 --home /opt/testuser
-RUN chmod 755 /opt/testuser
-
-RUN groupadd --gid 1008 testuser2
-RUN useradd --uid 1008 testuser2 --gid 1008 --home /opt/testuser2
-RUN chmod 755 /opt/testuser2
-
-RUN groupadd --gid 1009 httpfs
-RUN useradd --uid 1009 httpfs --gid 1009 --home /opt/httpfs
-RUN chmod 755 /opt/httpfs
 
 # Prep for Kerberized cluster
 RUN mkdir -p /etc/security/keytabs && chmod -R a+wr /etc/security/keytabs 
-ADD krb5.conf /etc/
-RUN chmod 644 /etc/krb5.conf
+COPY --chmod=644 krb5.conf /etc/
 
 # CSI / k8s / fuse / goofys dependency
 COPY --from=go --chmod=755 /go/bin/goofys /usr/bin/goofys
@@ -225,8 +147,7 @@ ENV OZONE_CONF_DIR=/etc/hadoop
 RUN mkdir /data && chmod 1777 /data
 
 # Set default entrypoint (used only if the ozone dir is not bind mounted)
-ADD entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod 755 /usr/local/bin/entrypoint.sh
+COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
 WORKDIR /opt/hadoop
 USER hadoop
