@@ -81,6 +81,12 @@ jobs:
       - name: List images
         run: |
           docker image ls
+      - name: Compatibility hacks
+        run: |
+          # Can be removed after release with HDDS-9031 (1.4.1 or later)
+          cd hadoop-ozone/dist/target/ozone-${OZONE_VERSION}
+          curl -LSs -o compose-v2.patch https://github.com/apache/ozone/commit/d80c45bb35bc3012d7f26f66e42d847672782aee.diff
+          patch -p5 < compose-v2.patch
       - name: Execute tests
         run: |
           pushd hadoop-ozone/dist/target/ozone-*
