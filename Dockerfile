@@ -42,6 +42,7 @@ RUN set -eux ; \
       jq \
       krb5-workstation \
       lsof \
+      ncurses \
       net-tools \
       nmap-ncat \
       openssl \
