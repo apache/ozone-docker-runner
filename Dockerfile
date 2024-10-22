@@ -42,6 +42,7 @@ RUN set -eux ; \
       jq \
       krb5-workstation \
       lsof \
+      ncurses \
       net-tools \
       nmap-ncat \
       openssl \
@@ -50,7 +51,6 @@ RUN set -eux ; \
       snappy \
       sudo \
       zlib \
-      ncurses \
     && dnf clean all \
     && ln -sf /usr/bin/python3 /usr/bin/python
 RUN sudo python3 -m pip install --upgrade pip
