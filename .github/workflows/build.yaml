@@ -14,14 +14,79 @@
 # limitations under the License.
 name: build
 on:
-  - push
-  - pull_request
+  pull_request:
+    types: [opened, ready_for_review, synchronize]
+  push:
+env:
+  VERSION: ${{ github.sha }}
 jobs:
   build:
     name: build and deploy
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - name: checkout source
-        uses: actions/checkout@v4
-      - name: build image
-        run: DOCKER_BUILDKIT=1 docker build -t ghcr.io/$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]' | sed 's/docker-//g') .
+      - name: Calculate image name in owner/repo format
+        id: names
+        run: |
+          owner="$(echo ${{ github.repository_owner }} | tr '[A-Z]' '[a-z]')"
+          echo "image_id=$owner/$IMAGE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/ozone-runner
+          tags: |
+            type=ref,event=tag
+            type=sha,prefix=,format=long
+
+      - name: Check if image exists
+        id: pull
+        run: |
+          success=false
+          if docker pull "ghcr.io/$IMAGE_ID:$VERSION"; then
+            success=true
+          fi
+          echo "success=$success" >> $GITHUB_OUTPUT
+        env:
+          IMAGE_ID: ${{ steps.names.outputs.image_id }}
+        continue-on-error: true
+
+      - name: Set up QEMU
+        if: ${{ steps.pull.outputs.success != 'true' }}
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        if: ${{ steps.pull.outputs.success != 'true' }}
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to ghcr.io
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and push multi-platform image
+        if: ${{ steps.pull.outputs.success != 'true' }}
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Apply tag to existing image
+        if: ${{ github.event_name == 'push' && github.ref_type == 'tag' && steps.pull.outputs.success == 'true' }}
+        run: |
+          docker tag "ghcr.io/$IMAGE_ID:$VERSION" "ghcr.io/$IMAGE_ID:$TAG"
+          docker push "ghcr.io/$IMAGE_ID:$TAG"
+        env:
+          IMAGE_ID: ${{ steps.names.outputs.image_id }}
+          TAG: ${{ github.ref_name }}
+
+      - name: Logout
+        if: always()
+        run: |
+          docker logout
