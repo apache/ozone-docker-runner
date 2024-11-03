@@ -47,7 +47,7 @@ jobs:
     steps:
       - name: Generate image ID
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
         with:
           images: |
             ${{ env.DEFAULT_REGISTRY }}/${{ github.repository_owner }}/ozone-runner
@@ -69,7 +69,7 @@ jobs:
       - name: Login to ${{ env.DEFAULT_REGISTRY }}
         id: login
         if: ${{ github.event_name != 'pull_request' && steps.pull.outputs.success == 'false' }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
         with:
           registry: ${{ env.DEFAULT_REGISTRY }}
           username: ${{ github.repository_owner }}
@@ -78,7 +78,7 @@ jobs:
       - name: Build and push image to ${{ env.DEFAULT_REGISTRY }}
         id: build
         if: ${{ steps.pull.outputs.success == 'false' }}
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75
         with:
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
