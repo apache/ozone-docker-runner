@@ -12,76 +12,75 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 name: build
+
+# This workflow builds the Docker image if it does not exists already.
+# For non-PR runs, it also pushes the image to the registry, tagging it by the full SHA of the commit.
+
 on:
   pull_request:
     types: [opened, ready_for_review, synchronize]
-  push:
+  workflow_call:
+    outputs:
+      image-id:
+        description: "Docker image ID in repo/owner/name:tag format"
+        value: ${{ jobs.build.outputs.image-id }}
+
+concurrency:
+  group: ${{ github.sha }}
+  cancel-in-progress: false
+
 env:
-  IMAGE_NAME: ozone-runner
-  VERSION: ${{ github.sha }}
+  # if changed, also update password in `login` step
+  DEFAULT_REGISTRY: ghcr.io
+
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
-    name: build and deploy
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    outputs:
+      image-id: ${{ steps.meta.outputs.tags }}
     steps:
-      - name: Calculate image name in owner/repo format
-        id: names
-        run: |
-          owner="$(echo ${{ github.repository_owner }} | tr '[A-Z]' '[a-z]')"
-          echo "image_id=$owner/$IMAGE_NAME" >> $GITHUB_OUTPUT
+      - name: Generate image ID
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.DEFAULT_REGISTRY }}/${{ github.repository_owner }}/ozone-runner
+          tags: |
+            # keep single item
+            # any further tags should be added only in tag.yaml, not here
+            type=sha,prefix=,format=long
 
       - name: Check if image exists
         id: pull
         run: |
           success=false
-          if docker pull "ghcr.io/$IMAGE_ID:$VERSION"; then
+          if docker pull "$DOCKER_METADATA_OUTPUT_TAGS"; then
             success=true
           fi
+
           echo "success=$success" >> $GITHUB_OUTPUT
-        env:
-          IMAGE_ID: ${{ steps.names.outputs.image_id }}
-        continue-on-error: true
 
-      # Login to repository, if needed
-      - name: Login to ghcr.io
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      # If image does not exist, build it from source
-      - name: Checkout source
-        if: ${{ steps.pull.outputs.success != 'true' }}
-        uses: actions/checkout@v4
+      - name: Login to ${{ env.DEFAULT_REGISTRY }}
+        id: login
+        if: ${{ github.event_name != 'pull_request' && steps.pull.outputs.success == 'false' }}
+        uses: docker/login-action@v3
         with:
-          persist-credentials: false
-      - name: Build image
-        if: ${{ steps.pull.outputs.success != 'true' }}
-        run: |
-          DOCKER_BUILDKIT=1 docker build --tag "ghcr.io/$IMAGE_ID:$VERSION" --label "runnumber=$GITHUB_RUN_ID" .
-        env:
-          IMAGE_ID: ${{ steps.names.outputs.image_id }}
-      # Push the image, unless running for a pull request
-      - name: Push image by SHA
-        if: ${{ steps.pull.outputs.success != 'true' && github.event_name == 'push' }}
-        run: |
-          docker push "ghcr.io/$IMAGE_ID:$VERSION"
-        env:
-          IMAGE_ID: ${{ steps.names.outputs.image_id }}
+          registry: ${{ env.DEFAULT_REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }} # update this if changing DEFAULT_REGISTRY
 
-      - name: Apply tag
-        if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
-        run: |
-          docker tag "ghcr.io/$IMAGE_ID:$VERSION" "ghcr.io/$IMAGE_ID:$TAG"
-          docker push "ghcr.io/$IMAGE_ID:$TAG"
-        env:
-          IMAGE_ID: ${{ steps.names.outputs.image_id }}
-          TAG: ${{ github.ref_name }}
-
-      - name: Logout
-        if: always()
-        run: |
-          docker logout
+      - name: Build and push image to ${{ env.DEFAULT_REGISTRY }}
+        id: build
+        if: ${{ steps.pull.outputs.success == 'false' }}
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
