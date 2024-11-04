@@ -59,7 +59,7 @@ COPY --from=go /go/bin/csc /usr/bin/csc
 
 #For executing inline smoketest
 RUN set -eux ; \
-    pip3 install awscli robotframework boto3 ; \
+    pip3 install awscli robotframework==6.1.1 boto3 ; \
     rm -r ~/.cache/pip
 
 #dumb init for proper init handling
