@@ -32,7 +32,7 @@ RUN set -eux ; \
         exit 1 ; \
     fi
 
-FROM rockylinux:8.9
+FROM rockylinux:9.3
 RUN set -eux ; \
     dnf install -y \
       bzip2 \
