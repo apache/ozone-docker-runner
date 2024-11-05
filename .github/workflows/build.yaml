@@ -16,7 +16,7 @@
 name: build
 
 # This workflow builds the Docker image if it does not exists already.
-# For non-PR runs, it also pushes the image to the registry, tagging it by the full SHA of the commit.
+# For non-PR runs, it also publishes the image to the registry, tagging it by the full SHA of the commit.
 
 on:
   pull_request:
@@ -53,7 +53,7 @@ jobs:
             ${{ env.DEFAULT_REGISTRY }}/${{ github.repository_owner }}/ozone-runner
           tags: |
             # keep single item
-            # any further tags should be added only in tag.yaml, not here
+            # any further tags should be added only in push.yaml, not here
             type=sha,prefix=,format=long
 
       - name: Check if image exists

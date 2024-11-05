@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: tag
+name: push
 
 # This workflow builds (if necessary) and tags the Docker image.
 
