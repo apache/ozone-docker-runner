@@ -49,7 +49,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/ozone-runner
           tags: |
             # keep single item
-            # any further tags should be added only in push.yaml, not here
+            # any further tags should be added only in build-and-tag.yaml, not here
             type=sha,prefix=,format=long
 
       - name: Check if image exists
