@@ -32,6 +32,8 @@ jobs:
     needs: build
     if: ${{ github.ref_type == 'tag' }}
     runs-on: ubuntu-latest
+    env:
+      IMAGE_ID: ${{ needs.build.outputs.image-id }}
     steps:
       - name: Generate tags
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
@@ -43,6 +45,10 @@ jobs:
           flavor: |
             latest=false
 
+      - name: Pull image
+        run: |
+          docker pull "$IMAGE_ID"
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
         with:
@@ -52,9 +58,7 @@ jobs:
 
       - name: Apply tags to existing image
         run: |
-          src=${{ needs.build.outputs.image-id }}
-          docker pull "$src"
           for tag in $DOCKER_METADATA_OUTPUT_TAGS; do
-            docker tag "$src" "$tag"
+            docker tag "$IMAGE_ID" "$tag"
             docker push "$tag"
           done
