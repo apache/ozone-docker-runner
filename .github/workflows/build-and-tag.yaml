@@ -72,9 +72,10 @@ jobs:
 
       - name: Apply tags to existing image
         run: |
+          set -x
           for registry in $REGISTRIES; do
-            for tag in $DOCKER_METADATA_OUTPUT_TAGS; do
-              docker tag "$IMAGE_ID" "$registry/$tag"
-              docker push "$registry/$tag"
-            done
+            opts="$(echo "$DOCKER_METADATA_OUTPUT_TAGS" | sed "s@^@--tag $registry/@g" | xargs echo)"
+            if [[ -n "$opts" ]]; then
+              docker buildx imagetools create $opts "$IMAGE_ID"
+            fi
           done
