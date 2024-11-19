@@ -96,17 +96,17 @@ RUN set -eux ; \
     curl -L ${url} | tar xvz ; \
     mv async-profiler-* /opt/profiler
 
-# OpenJDK 17
+# OpenJDK 21
 RUN set -eux ; \
     ARCH="$(arch)"; \
     case "${ARCH}" in \
         x86_64) \
-            url='https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz'; \
-            sha256='0022753d0cceecacdd3a795dd4cea2bd7ffdf9dc06e22ffd1be98411742fbb44'; \
+            url='https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz'; \
+            sha256='a2def047a73941e01a73739f92755f86b895811afb1f91243db214cff5bdac3f'; \
             ;; \
         aarch64) \
-            url='https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-aarch64_bin.tar.gz'; \
-            sha256='13bfd976acf8803f862e82c7113fb0e9311ca5458b1decaef8a09ffd91119fa4'; \
+            url='https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-aarch64_bin.tar.gz'; \
+            sha256='08db1392a48d4eb5ea5315cf8f18b89dbaf36cda663ba882cf03c704c9257ec2'; \
             ;; \
         *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
     esac && \
@@ -115,7 +115,7 @@ RUN set -eux ; \
     tar xzvf openjdk.tar.gz -C /usr/local && \
     rm -f openjdk.tar.gz
 
-ENV JAVA_HOME=/usr/local/jdk-17.0.2
+ENV JAVA_HOME=/usr/local/jdk-21.0.2
 # compatibility with Ozone 1.4.0 and earlier compose env.
 RUN mkdir -p /usr/lib/jvm && ln -s $JAVA_HOME /usr/lib/jvm/jre
 
