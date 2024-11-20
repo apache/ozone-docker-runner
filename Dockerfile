@@ -39,6 +39,7 @@ RUN set -eux ; \
       diffutils \
       findutils \
       fuse \
+      java-11-openjdk-devel \
       jq \
       krb5-workstation \
       lsof \
@@ -96,27 +97,10 @@ RUN set -eux ; \
     curl -L ${url} | tar xvz ; \
     mv async-profiler-* /opt/profiler
 
-# OpenJDK 11
-RUN set -eux ; \
-    ARCH="$(arch)"; \
-    case "${ARCH}" in \
-        x86_64) \
-            url='https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz'; \
-            sha256='99be79935354f5c0df1ad293620ea36d13f48ec3ea870c838f20c504c9668b57'; \
-            ;; \
-        *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
-    esac && \
-    curl -L ${url} -o openjdk.tar.gz && \
-    echo "${sha256} *openjdk.tar.gz" | sha256sum -c - && \
-    tar xzvf openjdk.tar.gz -C /usr/local && \
-    rm -f openjdk.tar.gz
-
-ENV JAVA_HOME=/usr/local/jdk-11.0.2
-# compatibility with Ozone 1.4.0 and earlier compose env.
-RUN mkdir -p /usr/lib/jvm && ln -s $JAVA_HOME /usr/lib/jvm/jre
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk
 
 ENV LD_LIBRARY_PATH=/usr/local/lib
-ENV PATH=/opt/hadoop/libexec:$PATH:$JAVA_HOME/bin:/opt/hadoop/bin
+ENV PATH=/opt/hadoop/libexec:$PATH:/opt/hadoop/bin
 
 RUN id=1000; \
     for u in hadoop om dn scm s3g recon testuser testuser2 httpfs; do \
