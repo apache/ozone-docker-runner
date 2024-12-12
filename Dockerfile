@@ -58,6 +58,11 @@ RUN sudo python3 -m pip install --upgrade pip
 
 COPY --from=go /go/bin/csc /usr/bin/csc
 
+RUN dnf install -y unzip \
+    && curl https://rclone.org/install.sh | sudo bash \
+    && dnf remove -y unzip \
+    && dnf clean all
+
 #For executing inline smoketest
 RUN set -eux ; \
     pip3 install awscli robotframework==6.1.1 boto3 ; \
