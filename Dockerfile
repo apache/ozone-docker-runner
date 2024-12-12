@@ -41,6 +41,7 @@ RUN set -eux ; \
       fuse \
       jq \
       krb5-workstation \
+      libxcrypt-compat \
       lsof \
       ncurses \
       net-tools \
