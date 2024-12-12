@@ -42,6 +42,7 @@ RUN set -eux ; \
       java-11-openjdk-devel \
       jq \
       krb5-workstation \
+      libxcrypt-compat \
       lsof \
       ncurses \
       net-tools \
