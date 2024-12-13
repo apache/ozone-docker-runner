@@ -58,10 +58,18 @@ RUN sudo python3 -m pip install --upgrade pip
 
 COPY --from=go /go/bin/csc /usr/bin/csc
 
-RUN dnf install -y unzip \
-    && curl https://rclone.org/install.sh | sudo bash \
-    && dnf remove -y unzip \
-    && dnf clean all
+# Install rclone for smoketest
+RUN set -eux ; \
+    ARCH="$(arch)" ; \
+    case "${ARCH}" in \
+        x86_64)  url='https://downloads.rclone.org/rclone-current-linux-amd64.rpm' ;; \
+        aarch64) url='https://downloads.rclone.org/rclone-current-linux-arm64.rpm' ;; \
+        *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
+    esac; \
+    curl -L -o /tmp/package.rpm "${url}"; \
+    dnf install -y /tmp/package.rpm; \
+    rm -f /tmp/package.rpm
+
 
 #For executing inline smoketest
 RUN set -eux ; \
