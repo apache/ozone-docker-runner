@@ -58,6 +58,19 @@ RUN sudo python3 -m pip install --upgrade pip
 
 COPY --from=go /go/bin/csc /usr/bin/csc
 
+# Install rclone for smoketest
+RUN set -eux ; \
+    ARCH="$(arch)" ; \
+    case "${ARCH}" in \
+        x86_64)  url='https://downloads.rclone.org/rclone-current-linux-amd64.rpm' ;; \
+        aarch64) url='https://downloads.rclone.org/rclone-current-linux-arm64.rpm' ;; \
+        *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
+    esac; \
+    curl -L -o /tmp/package.rpm "${url}"; \
+    dnf install -y /tmp/package.rpm; \
+    rm -f /tmp/package.rpm
+
+
 #For executing inline smoketest
 RUN set -eux ; \
     pip3 install awscli robotframework==6.1.1 boto3 ; \
