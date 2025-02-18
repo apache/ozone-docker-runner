@@ -103,8 +103,8 @@ RUN curl -Lo /opt/byteman.jar https://repo.maven.apache.org/maven2/org/jboss/byt
 RUN set -eux ; \
     ARCH="$(arch)" ; \
     case "${ARCH}" in \
-        x86_64)  url='https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.7/async-profiler-2.7-linux-x64.tar.gz' ;; \
-        aarch64) url='https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.7/async-profiler-2.7-linux-arm64.tar.gz' ;; \
+        x86_64)  url='https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.9/async-profiler-2.9-linux-x64.tar.gz' ;; \
+        aarch64) url='https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.9/async-profiler-2.9-linux-arm64.tar.gz' ;; \
         *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
     esac; \
     curl -L ${url} | tar xvz ; \
