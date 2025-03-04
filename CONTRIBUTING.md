@@ -62,11 +62,7 @@ To run complete Ozone CI with the custom image:
 3. Update `docker.ozone-runner.version` to `<commit SHA>` in [hadoop-ozone/dist/pom.xml](https://github.com/apache/ozone/blob/bb16f66e22c44b360d42d0cae87024786e27c61b/hadoop-ozone/dist/pom.xml#L28).
 4. Commit the change and push to your fork of `apache/ozone`.
 
-## Tagging
-
-(for committers)
-
-Publishing Docker tags:
+## Publishing Docker Tags (for committers)
 
 1. Fetch changes to your local clone.
 2. Add a Git tag for the commit following the existing pattern `<date>-<n>-<flavor>`, where
