@@ -33,6 +33,8 @@ $ ./build.sh
  => => naming to docker.io/apache/ozone-runner:dev
 ```
 
+This will create a single-platform image for your architecture.
+
 ### Testing
 
 To try the image locally with Ozone acceptance tests, define the version to be used:
@@ -49,15 +51,7 @@ If this is your first time working on the image, please enable GitHub Actions wo
 
 ### Building
 
-CI checks are triggered by pushing changes to your fork.
-
-GitHub Actions workflow runs in your fork are listed at `https://github.com/<username>/ozone-docker-runner/actions`.
-
-The image is built and tagged with commit SHA in GitHub, ready for testing integration with other repos.
-
-Images built in your fork are available at `https://github.com/<username>/ozone-docker-runner/pkgs/container/ozone-runner`.
-
-These images can be shared with other developers for feedback.
+Whenever changes are pushed to your fork, GitHub builds a multi-platform image (for `amd64` and `arm64`), and tags it with the commit SHA.  These images can be shared with other developers for feedback.  Workflow runs are listed at `https://github.com/<username>/ozone-docker-runner/actions`, images at `https://github.com/<username>/ozone-docker-runner/pkgs/container/ozone-runner`.
 
 ### Testing
 
