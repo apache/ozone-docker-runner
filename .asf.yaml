@@ -18,7 +18,7 @@ meta:
   nextgen: true
 
 github:
-  description: "Container image to provide runtime environment for developing and testing Apache Ozone"
+  description: "Base image with tools for running and testing Apache Ozone"
   homepage: https://ozone.apache.org
   labels:
     - ozone
