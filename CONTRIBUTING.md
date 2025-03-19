@@ -58,8 +58,8 @@ Whenever changes are pushed to your fork, GitHub builds a multi-platform image (
 To run complete Ozone CI with the custom image:
 
 1. Create a new branch in your clone of `apache/ozone`.
-2. Update `OZONE_RUNNER_IMAGE` to `ghrc.io/<username>/ozone-runner` in [ci.yml](https://github.com/apache/ozone/blob/bb16f66e22c44b360d42d0cae87024786e27c61b/.github/workflows/ci.yml#L37).
-3. Update `docker.ozone-runner.version` to `<commit SHA>` in [hadoop-ozone/dist/pom.xml](https://github.com/apache/ozone/blob/bb16f66e22c44b360d42d0cae87024786e27c61b/hadoop-ozone/dist/pom.xml#L28).
+2. Update `OZONE_RUNNER_IMAGE` to `ghcr.io/<username>/ozone-runner` in [check.yml](https://github.com/apache/ozone/blob/23b0505d2ee27004f6e6c770de09e03853cf7643/.github/workflows/check.yml#L137).
+3. Update `docker.ozone-runner.version` to `<commit SHA>` in [hadoop-ozone/dist/pom.xml](https://github.com/apache/ozone/blob/23b0505d2ee27004f6e6c770de09e03853cf7643/hadoop-ozone/dist/pom.xml#L28).
 4. Commit the change and push to your fork of `apache/ozone`.
 
 ## Publishing Docker Tags (for committers)
