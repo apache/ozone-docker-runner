@@ -73,7 +73,7 @@ RUN set -eux ; \
 
 #For executing inline smoketest
 RUN set -eux ; \
-    pip3 install awscli robotframework==6.1.1 boto3 ; \
+    pip3 install awscli==1.38.15 robotframework==6.1.1 boto3==1.37.15 ; \
     rm -r ~/.cache/pip
 
 #dumb init for proper init handling
