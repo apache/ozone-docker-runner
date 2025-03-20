@@ -113,7 +113,6 @@ RUN set -eux ; \
 
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk
 
-ENV LD_LIBRARY_PATH=/usr/local/lib
 ENV PATH=/opt/hadoop/libexec:$PATH:/opt/hadoop/bin
 
 RUN id=1000; \
