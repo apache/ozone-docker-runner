@@ -110,6 +110,19 @@ RUN set -eux ; \
     curl -L ${url} | tar xvz ; \
     mv async-profiler-* /opt/profiler
 
+# Hadoop native libary (Hadoop 3.4.1 doesn't have aarch64 binary)
+ENV LD_LIBRARY_PATH=/usr/lib
+RUN set -eux ; \
+    ARCH="$(arch)" ; \
+    case "${ARCH}" in \
+        x86_64)  url='https://dlcdn.apache.org/hadoop/common/hadoop-3.4.0/hadoop-3.4.0.tar.gz' ;; \
+        aarch64) url='https://dlcdn.apache.org/hadoop/common/hadoop-3.4.0/hadoop-3.4.0-aarch64.tar.gz' ;; \
+        *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
+    esac; \
+    curl -L ${url} -o hadoop-3.4.0.tar.gz && \
+    tar xzvf hadoop-3.4.0.tar.gz -C /tmp && \
+    mv /tmp/hadoop-3.4.0/lib/native/libhadoop.*  $LD_LIBRARY_PATH/
+
 # OpenJDK 21
 RUN set -eux ; \
     ARCH="$(arch)"; \
