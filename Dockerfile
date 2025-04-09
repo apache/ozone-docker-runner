@@ -121,7 +121,9 @@ RUN set -eux ; \
     esac; \
     curl -L "https://www.apache.org/dyn/closer.lua?action=download&filename=hadoop/common/hadoop-${hadoop_version}/$file" -o "hadoop-${hadoop_version}.tar.gz" && \
     tar xzvf hadoop-${hadoop_version}.tar.gz -C /tmp && \
-    mv /tmp/hadoop-${hadoop_version}/lib/native/libhadoop.*  /usr/lib/
+    mv /tmp/hadoop-${hadoop_version}/lib/native/libhadoop.*  /usr/lib/ && \
+    rm -rf /tmp/hadoop-${hadoop_version} && \
+    rm -f hadoop-${hadoop_version}.tar.gz
 
 # OpenJDK 21
 RUN set -eux ; \
