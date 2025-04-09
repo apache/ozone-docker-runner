@@ -111,17 +111,17 @@ RUN set -eux ; \
     mv async-profiler-* /opt/profiler
 
 # Hadoop native libary (Hadoop 3.4.1 doesn't have aarch64 binary)
-ENV LD_LIBRARY_PATH=/usr/lib
 RUN set -eux ; \
     ARCH="$(arch)" ; \
+    hadoop_version=3.4.0 ; \
     case "${ARCH}" in \
-        x86_64)  url='https://dlcdn.apache.org/hadoop/common/hadoop-3.4.0/hadoop-3.4.0.tar.gz' ;; \
-        aarch64) url='https://dlcdn.apache.org/hadoop/common/hadoop-3.4.0/hadoop-3.4.0-aarch64.tar.gz' ;; \
+        x86_64)  file=hadoop-${hadoop_version}.tar.gz ;; \
+        aarch64) file=hadoop-${hadoop_version}-aarch64.tar.gz ;; \
         *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
     esac; \
-    curl -L ${url} -o hadoop-3.4.0.tar.gz && \
-    tar xzvf hadoop-3.4.0.tar.gz -C /tmp && \
-    mv /tmp/hadoop-3.4.0/lib/native/libhadoop.*  $LD_LIBRARY_PATH/
+    curl -L "https://www.apache.org/dyn/closer.lua?action=download&filename=hadoop/common/hadoop-${hadoop_version}/$file" -o "hadoop-${hadoop_version}.tar.gz" && \
+    tar xzvf hadoop-${hadoop_version}.tar.gz -C /tmp && \
+    mv /tmp/hadoop-${hadoop_version}/lib/native/libhadoop.*  /usr/lib/
 
 # OpenJDK 21
 RUN set -eux ; \
