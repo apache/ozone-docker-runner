@@ -52,6 +52,7 @@ RUN set -eux ; \
       snappy \
       sudo \
       zlib \
+      unzip \
     && dnf clean all \
     && ln -sf /usr/bin/python3 /usr/bin/python
 RUN sudo python3 -m pip install --upgrade pip
@@ -97,19 +98,17 @@ RUN set -eux ; \
 
 #byteman test for development
 ARG BYTEMAN_VERSION=4.0.25
-ARG BYTEMAN_HOME=/opt/byteman/
-RUN sudo yum install unzip -y && \
-    curl -L -o /tmp/byteman.zip \
-    https://downloads.jboss.org/byteman/${BYTEMAN_VERSION}/byteman-download-${BYTEMAN_VERSION}-bin.zip && \
+ARG BYTEMAN_LIB=/opt/byteman/lib
+RUN curl -L -o /tmp/byteman.zip https://downloads.jboss.org/byteman/${BYTEMAN_VERSION}/byteman-download-${BYTEMAN_VERSION}-bin.zip && \
     unzip /tmp/byteman.zip -d /tmp && \
-    sudo mkdir -p ${BYTEMAN_HOME}/lib && \
-    sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/lib/byteman.jar ${BYTEMAN_HOME}/lib/byteman.jar && \
-    sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/lib/byteman-submit.jar ${BYTEMAN_HOME}/lib/byteman-submit.jar && \
+    sudo mkdir -p ${BYTEMAN_LIB} && \
+    sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/lib/byteman.jar ${BYTEMAN_LIB}/byteman.jar && \
+    sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/lib/byteman-submit.jar ${BYTEMAN_LIB}/byteman-submit.jar && \
     sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/bin/bmsubmit.sh /usr/local/bin/bmsubmit && \
     sudo chmod +x /usr/local/bin/bmsubmit && \
     sudo rm -rf /tmp/byteman.zip /tmp/byteman-download-${BYTEMAN_VERSION} && \
-    sudo chmod o+r ${BYTEMAN_HOME}/lib/byteman.jar && \
-    sudo ln -s ${BYTEMAN_HOME}/lib/byteman.jar /opt/byteman.jar
+    sudo chmod o+r ${BYTEMAN_LIB}/byteman.jar && \
+    sudo ln -s ${BYTEMAN_LIB}/byteman.jar /opt/byteman.jar
 
 #async profiler for development profiling
 RUN set -eux ; \
