@@ -98,7 +98,7 @@ RUN set -eux ; \
 #byteman test for development
 ARG BYTEMAN_VERSION=4.0.25
 ARG BYTEMAN_HOME=/opt/byteman/
-RUN yum install unzip curl -y && \
+RUN sudo yum install unzip -y && \
     curl -L -o /tmp/byteman.zip \
     https://downloads.jboss.org/byteman/${BYTEMAN_VERSION}/byteman-download-${BYTEMAN_VERSION}-bin.zip && \
     unzip /tmp/byteman.zip -d /tmp && \
@@ -107,7 +107,9 @@ RUN yum install unzip curl -y && \
     sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/lib/byteman-submit.jar ${BYTEMAN_HOME}/lib/byteman-submit.jar && \
     sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/bin/bmsubmit.sh /usr/local/bin/bmsubmit && \
     sudo chmod +x /usr/local/bin/bmsubmit && \
-    sudo rm -rf /tmp/byteman.zip /tmp/byteman-download-${BYTEMAN_VERSION}
+    sudo rm -rf /tmp/byteman.zip /tmp/byteman-download-${BYTEMAN_VERSION} && \
+    sudo chmod o+r ${BYTEMAN_HOME}/lib/byteman.jar && \
+    sudo ln -s ${BYTEMAN_HOME}/lib/byteman.jar /opt/byteman.jar
 
 #async profiler for development profiling
 RUN set -eux ; \
