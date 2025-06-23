@@ -96,8 +96,18 @@ RUN set -eux ; \
     mv dumb-init /usr/local/bin/dumb-init
 
 #byteman test for development
-RUN curl -Lo /opt/byteman.jar https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.23/byteman-4.0.23.jar \
-    && chmod o+r /opt/byteman.jar
+ARG BYTEMAN_VERSION=4.0.25
+ARG BYTEMAN_HOME=/opt/byteman/
+RUN yum install unzip curl -y && \
+    curl -L -o /tmp/byteman.zip \
+    https://downloads.jboss.org/byteman/${BYTEMAN_VERSION}/byteman-download-${BYTEMAN_VERSION}-bin.zip && \
+    unzip /tmp/byteman.zip -d /tmp && \
+    sudo mkdir -p ${BYTEMAN_HOME}/lib && \
+    sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/lib/byteman.jar ${BYTEMAN_HOME}/lib/byteman.jar && \
+    sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/lib/byteman-submit.jar ${BYTEMAN_HOME}/lib/byteman-submit.jar && \
+    sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/bin/bmsubmit.sh /usr/local/bin/bmsubmit && \
+    sudo chmod +x /usr/local/bin/bmsubmit && \
+    sudo rm -rf /tmp/byteman.zip /tmp/byteman-download-${BYTEMAN_VERSION}
 
 #async profiler for development profiling
 RUN set -eux ; \
