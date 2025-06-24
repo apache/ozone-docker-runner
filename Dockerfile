@@ -51,6 +51,7 @@ RUN set -eux ; \
       python3 python3-pip \
       snappy \
       sudo \
+      unzip \
       zlib \
     && dnf clean all \
     && ln -sf /usr/bin/python3 /usr/bin/python
@@ -96,8 +97,18 @@ RUN set -eux ; \
     mv dumb-init /usr/local/bin/dumb-init
 
 #byteman test for development
-RUN curl -Lo /opt/byteman.jar https://repo.maven.apache.org/maven2/org/jboss/byteman/byteman/4.0.23/byteman-4.0.23.jar \
-    && chmod o+r /opt/byteman.jar
+ARG BYTEMAN_VERSION=4.0.25
+ARG BYTEMAN_LIB=/opt/byteman/lib
+RUN curl -L -o /tmp/byteman.zip https://downloads.jboss.org/byteman/${BYTEMAN_VERSION}/byteman-download-${BYTEMAN_VERSION}-bin.zip && \
+    unzip /tmp/byteman.zip -d /tmp && \
+    sudo mkdir -p ${BYTEMAN_LIB} && \
+    sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/lib/byteman.jar ${BYTEMAN_LIB}/byteman.jar && \
+    sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/lib/byteman-submit.jar ${BYTEMAN_LIB}/byteman-submit.jar && \
+    sudo cp /tmp/byteman-download-${BYTEMAN_VERSION}/bin/bmsubmit.sh /usr/local/bin/bmsubmit && \
+    sudo chmod +x /usr/local/bin/bmsubmit && \
+    sudo rm -rf /tmp/byteman.zip /tmp/byteman-download-${BYTEMAN_VERSION} && \
+    sudo chmod o+r ${BYTEMAN_LIB}/byteman.jar && \
+    sudo ln -s ${BYTEMAN_LIB}/byteman.jar /opt/byteman.jar
 
 #async profiler for development profiling
 RUN set -eux ; \
