@@ -51,8 +51,8 @@ RUN set -eux ; \
       python3 python3-pip \
       snappy \
       sudo \
-      zlib \
       unzip \
+      zlib \
     && dnf clean all \
     && ln -sf /usr/bin/python3 /usr/bin/python
 RUN sudo python3 -m pip install --upgrade pip
