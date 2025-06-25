@@ -60,14 +60,15 @@ RUN sudo python3 -m pip install --upgrade pip
 COPY --from=go /go/bin/csc /usr/bin/csc
 
 # Install rclone for smoketest
+ARG RCLONE_VERSION=1.69.3
 RUN set -eux ; \
     ARCH="$(arch)" ; \
     case "${ARCH}" in \
-        x86_64)  url='https://downloads.rclone.org/rclone-current-linux-amd64.rpm' ;; \
-        aarch64) url='https://downloads.rclone.org/rclone-current-linux-arm64.rpm' ;; \
+        x86_64)  arch='amd64' ;; \
+        aarch64) arch='arm64' ;; \
         *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
     esac; \
-    curl -L -o /tmp/package.rpm "${url}"; \
+    curl -L -o /tmp/package.rpm "https://downloads.rclone.org/v${RCLONE_VERSION}/rclone-v${RCLONE_VERSION}-linux-${arch}.rpm"; \
     dnf install -y /tmp/package.rpm; \
     rm -f /tmp/package.rpm
 
