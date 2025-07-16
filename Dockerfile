@@ -16,21 +16,6 @@
 
 FROM golang:1.17.8-buster AS go
 RUN go install github.com/rexray/gocsi/csc@latest
-# Compile latest goofys for arm64 if necessary, which doesn't have a released binary
-RUN set -eux ; \
-    ARCH="$(arch)"; \
-    if [ ${ARCH} = "aarch64" ]; then \
-        git clone https://github.com/kahing/goofys.git ; \
-        cd goofys ; \
-        git checkout 08534b2 ; \
-        go build ; \
-        mv goofys /go/bin/ ; \
-    elif [ ${ARCH} = "x86_64" ]; then \
-        curl -L https://github.com/kahing/goofys/releases/download/v0.24.0/goofys -o /go/bin/goofys ; \
-    else \
-        echo "Unsupported architecture: ${ARCH}"; \
-        exit 1 ; \
-    fi
 
 FROM rockylinux:9.3
 RUN set -eux ; \
@@ -57,7 +42,19 @@ RUN set -eux ; \
     && ln -sf /usr/bin/python3 /usr/bin/python
 RUN sudo python3 -m pip install --upgrade pip
 
+# CSI / k8s / fuse / goofys dependency
 COPY --from=go /go/bin/csc /usr/bin/csc
+# S3 FUSE support
+RUN set -eux ; \
+    ARCH="$(arch)"; \
+    case "${ARCH}" in \
+        x86_64)  arch='x86_64' ;; \
+        aarch64) arch='arm64' ;; \
+        *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
+    esac; \
+    curl -L -o /tmp/mount-s3.rpm "https://s3.amazonaws.com/mountpoint-s3-release/latest/${arch}/mount-s3.rpm"; \
+    dnf install -y /tmp/mount-s3.rpm; \
+    rm -f /tmp/mount-s3.rpm
 
 # Install rclone for smoketest
 ARG RCLONE_VERSION=1.69.3
@@ -177,9 +174,6 @@ RUN chown hadoop /opt
 # Prep for Kerberized cluster
 RUN mkdir -p /etc/security/keytabs && chmod -R a+wr /etc/security/keytabs 
 COPY --chmod=644 krb5.conf /etc/
-
-# CSI / k8s / fuse / goofys dependency
-COPY --from=go --chmod=755 /go/bin/goofys /usr/bin/goofys
 
 # Create hadoop and data directories. Grant all permission to all on them
 RUN mkdir -p /etc/hadoop && mkdir -p /var/log/hadoop && chmod 1777 /etc/hadoop && chmod 1777 /var/log/hadoop
