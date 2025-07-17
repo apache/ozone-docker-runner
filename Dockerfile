@@ -44,10 +44,10 @@ RUN sudo python3 -m pip install --upgrade pip
 
 # CSI / k8s / fuse / goofys dependency
 COPY --from=go /go/bin/csc /usr/bin/csc
-# S3 FUSE support
+# S3 FUSE support - mountpoint-s3
+ARG MOUNTPOINT_S3_VERSION=1.19.0
 RUN set -eux ; \
     ARCH="$(arch)"; \
-    MOUNTPOINT_S3_VERSION="1.19.0"; \
     case "${ARCH}" in \
         x86_64)  url="https://s3.amazonaws.com/mountpoint-s3-release/${MOUNTPOINT_S3_VERSION}/x86_64/mount-s3-${MOUNTPOINT_S3_VERSION}-x86_64.rpm" ;; \
         aarch64) url="https://s3.amazonaws.com/mountpoint-s3-release/${MOUNTPOINT_S3_VERSION}/arm64/mount-s3-${MOUNTPOINT_S3_VERSION}-arm64.rpm" ;; \
