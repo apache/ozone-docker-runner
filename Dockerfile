@@ -47,14 +47,15 @@ COPY --from=go /go/bin/csc /usr/bin/csc
 # S3 FUSE support
 RUN set -eux ; \
     ARCH="$(arch)"; \
+    MOUNTPOINT_S3_VERSION="1.19.0"; \
     case "${ARCH}" in \
-        x86_64)  arch='x86_64' ;; \
-        aarch64) arch='arm64' ;; \
+        x86_64)  url="https://s3.amazonaws.com/mountpoint-s3-release/${MOUNTPOINT_S3_VERSION}/x86_64/mount-s3-${MOUNTPOINT_S3_VERSION}-x86_64.rpm" ;; \
+        aarch64) url="https://s3.amazonaws.com/mountpoint-s3-release/${MOUNTPOINT_S3_VERSION}/arm64/mount-s3-${MOUNTPOINT_S3_VERSION}-arm64.rpm" ;; \
         *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
     esac; \
-    curl -L -o /tmp/mount-s3.rpm "https://s3.amazonaws.com/mountpoint-s3-release/latest/${arch}/mount-s3.rpm"; \
-    dnf install -y /tmp/mount-s3.rpm; \
-    rm -f /tmp/mount-s3.rpm
+    curl -L ${url} -o mount-s3.rpm ; \
+    dnf install -y mount-s3.rpm ; \
+    rm -f mount-s3.rpm
 
 # Install rclone for smoketest
 ARG RCLONE_VERSION=1.69.3
