@@ -49,11 +49,11 @@ ARG MOUNTPOINT_S3_VERSION=1.19.0
 RUN set -eux ; \
     ARCH="$(arch)"; \
     case "${ARCH}" in \
-        x86_64)  url="https://s3.amazonaws.com/mountpoint-s3-release/${MOUNTPOINT_S3_VERSION}/x86_64/mount-s3-${MOUNTPOINT_S3_VERSION}-x86_64.rpm" ;; \
-        aarch64) url="https://s3.amazonaws.com/mountpoint-s3-release/${MOUNTPOINT_S3_VERSION}/arm64/mount-s3-${MOUNTPOINT_S3_VERSION}-arm64.rpm" ;; \
+        x86_64)  arch='x86_64' ;; \
+        aarch64) arch='arm64' ;; \
         *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
     esac; \
-    curl -L ${url} -o mount-s3.rpm ; \
+    curl -L "https://s3.amazonaws.com/mountpoint-s3-release/${MOUNTPOINT_S3_VERSION}/${arch}/mount-s3-${MOUNTPOINT_S3_VERSION}-${arch}.rpm" -o mount-s3.rpm ; \
     dnf install -y mount-s3.rpm ; \
     rm -f mount-s3.rpm
 
