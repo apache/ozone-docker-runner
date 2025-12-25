@@ -67,7 +67,7 @@ RUN set -eux ; \
     rm -rf /tmp/hadoop-${hadoop_version} && \
     rm -f hadoop-${hadoop_version}.tar.gz
 
-ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+ENV JAVA_HOME=/usr/lib/jvm/jre-21-openjdk
 
 ENV PATH=/opt/hadoop/libexec:$PATH:$JAVA_HOME/bin:/opt/hadoop/bin
 
