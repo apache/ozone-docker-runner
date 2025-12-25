@@ -19,6 +19,7 @@ RUN set -eux ; \
     dnf install -y \
       bzip2 \
       findutils \
+      java-21-openjdk-headless \
       krb5-workstation \
       libxcrypt-compat \
       ncurses \
@@ -65,9 +66,6 @@ RUN set -eux ; \
     mv /tmp/hadoop-${hadoop_version}/lib/native/libhadoop.*  /usr/lib/ && \
     rm -rf /tmp/hadoop-${hadoop_version} && \
     rm -f hadoop-${hadoop_version}.tar.gz
-
-# OpenJDK 21
-RUN dnf install -y java-21-openjdk-headless && dnf clean all
 
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk
 
