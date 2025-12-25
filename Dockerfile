@@ -23,14 +23,15 @@ RUN set -eux ; \
       krb5-workstation \
       libxcrypt-compat \
       ncurses \
+      python3 \
       openssl \
       procps \
       snappy \
       sudo \
       unzip \
       zlib \
-    && dnf clean all
-
+    && dnf clean all \
+    && ln -sf /usr/bin/python3 /usr/bin/python
 
 #dumb init for proper init handling
 RUN set -eux ; \
