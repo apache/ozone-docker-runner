@@ -40,7 +40,7 @@ RUN set -eux ; \
       zlib \
     && dnf clean all \
     && ln -sf /usr/bin/python3 /usr/bin/python
-RUN sudo python3 -m pip install --upgrade pip
+RUN python3 -m pip install --upgrade pip
 
 # CSI / k8s / fuse / goofys dependency
 COPY --from=go /go/bin/csc /usr/bin/csc
@@ -101,13 +101,13 @@ ENV BYTEMAN_HOME=/opt/byteman
 RUN cd /tmp && \
     curl -L -o byteman.zip https://downloads.jboss.org/byteman/${BYTEMAN_VERSION}/byteman-download-${BYTEMAN_VERSION}-bin.zip && \
     unzip -j -d byteman byteman.zip && \
-    sudo mkdir -p ${BYTEMAN_HOME}/lib && \
-    sudo mv byteman/byteman.jar byteman/byteman-submit.jar ${BYTEMAN_HOME}/lib/ && \
-    sudo mv byteman/bmsubmit.sh /usr/local/bin/bmsubmit && \
-    sudo chmod +x /usr/local/bin/bmsubmit && \
-    sudo rm -rf byteman.zip byteman && \
-    sudo chmod -R a+rX ${BYTEMAN_HOME} && \
-    sudo ln -s ${BYTEMAN_HOME}/lib/byteman.jar /opt/byteman.jar
+    mkdir -p ${BYTEMAN_HOME}/lib && \
+    mv byteman/byteman.jar byteman/byteman-submit.jar ${BYTEMAN_HOME}/lib/ && \
+    mv byteman/bmsubmit.sh /usr/local/bin/bmsubmit && \
+    chmod +x /usr/local/bin/bmsubmit && \
+    rm -rf byteman.zip byteman && \
+    chmod -R a+rX ${BYTEMAN_HOME} && \
+    ln -s ${BYTEMAN_HOME}/lib/byteman.jar /opt/byteman.jar
 
 #async profiler for development profiling
 RUN set -eux ; \
