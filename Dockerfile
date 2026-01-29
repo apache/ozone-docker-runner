@@ -54,19 +54,18 @@ RUN set -eux ; \
     mv dumb-init /usr/local/bin/dumb-init
 
 
-# Hadoop native libary (Hadoop 3.4.1 doesn't have aarch64 binary)
+# Hadoop native libary
 RUN set -eux ; \
     ARCH="$(arch)" ; \
-    hadoop_version=3.4.0 ; \
+    hadoop_version=3.4.2 ; \
     case "${ARCH}" in \
-        x86_64)  file=hadoop-${hadoop_version}.tar.gz ;; \
-        aarch64) file=hadoop-${hadoop_version}-aarch64.tar.gz ;; \
+        x86_64)  file=hadoop-${hadoop_version}-lean.tar.gz ;; \
+        aarch64) file=hadoop-${hadoop_version}-aarch64-lean.tar.gz ;; \
         *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
     esac; \
     curl -L "https://www.apache.org/dyn/closer.lua?action=download&filename=hadoop/common/hadoop-${hadoop_version}/$file" -o "hadoop-${hadoop_version}.tar.gz" && \
-    tar xzvf hadoop-${hadoop_version}.tar.gz -C /tmp && \
-    mv /tmp/hadoop-${hadoop_version}/lib/native/libhadoop.*  /usr/lib/ && \
-    rm -rf /tmp/hadoop-${hadoop_version} && \
+    tar xzvf hadoop-${hadoop_version}.tar.gz -C /usr/lib --strip-components 3 "hadoop-${hadoop_version}/lib/native/libhadoop.*" && \
+    chown --no-dereference root:root /usr/lib/libhadoop* && \
     rm -f hadoop-${hadoop_version}.tar.gz
 
 ENV JAVA_HOME=/usr/lib/jvm/jre-21-openjdk
