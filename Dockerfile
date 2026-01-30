@@ -32,7 +32,7 @@ RUN set -eux ; \
         exit 1 ; \
     fi
 
-FROM rockylinux:9.3
+FROM rockylinux/rockylinux:9
 RUN set -eux ; \
     dnf install -y \
       bzip2 \
@@ -55,7 +55,7 @@ RUN set -eux ; \
       zlib \
     && dnf clean all \
     && ln -sf /usr/bin/python3 /usr/bin/python
-RUN sudo python3 -m pip install --upgrade pip
+RUN python3 -m pip install --upgrade pip
 
 COPY --from=go /go/bin/csc /usr/bin/csc
 
