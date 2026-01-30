@@ -17,7 +17,7 @@
 FROM golang:1.17.8-buster AS go
 RUN go install github.com/rexray/gocsi/csc@latest
 
-FROM rockylinux:9.3
+FROM rockylinux/rockylinux:9
 RUN set -eux ; \
     dnf upgrade -y \
     && dnf install -y \
