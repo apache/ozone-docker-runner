@@ -20,6 +20,7 @@ RUN go install github.com/rexray/gocsi/csc@latest
 FROM rockylinux/rockylinux:9
 RUN set -eux ; \
     dnf upgrade -y \
+      --exclude tar \
     && dnf install -y \
       bzip2 \
       diffutils \
