@@ -17,6 +17,8 @@
 FROM golang:1.17.8-buster AS go
 RUN go install github.com/rexray/gocsi/csc@latest
 
+# Security update RHSA-2026:0067 breaks tar on arm64.
+# Remove exclusion if package newer than tar-1.34-9.el9_7 is available (and works OK)
 FROM rockylinux/rockylinux:9
 RUN set -eux ; \
     dnf upgrade -y \
