@@ -86,6 +86,7 @@ RUN id=1000; \
     done
 
 RUN echo "hadoop ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN chmod 0400 /etc/shadow # workaround for "PAM account management error: Authentication service cannot retrieve authentication info" when trying to sudo
 RUN chown hadoop /opt
 
 # Prep for Kerberized cluster
@@ -103,5 +104,6 @@ COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
 WORKDIR /opt/hadoop
 USER hadoop
+RUN sudo whoami # sanity check
 
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--", "entrypoint.sh"]
