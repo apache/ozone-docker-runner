@@ -31,15 +31,16 @@ concurrency:
   group: ${{ github.sha }}
   cancel-in-progress: false
 
-permissions:
-  contents: read
-  packages: write
+permissions: { }
 
 jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
       image-id: ${{ steps.meta.outputs.tags }}
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Generate image ID
         id: meta
