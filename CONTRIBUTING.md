@@ -19,7 +19,7 @@
 
 For general contribution guideline, please check the [Apache Ozone repository](https://github.com/apache/ozone/blob/master/CONTRIBUTING.md).
 
-Development of the `ozone-runner` image happens on branch `master`, relevant changes are cherry-picked to branch `jdk11`.
+Development of the `ozone-runner` image happens on branch `master`.  Relevant changes are cherry-picked to branch `jdk11` (used for versions before Ozone 2.0), `jdk8` (for testing Ozone client Java version compatibility) and `slim` (a variant without dev/test tools, used by other projects).
 
 ## Local Build and Test
 
@@ -66,8 +66,17 @@ To run complete Ozone CI with the custom image:
 
 1. Fetch changes to your local clone.
 2. Add a Git tag for the commit following the existing pattern `<date>-<n>-<flavor>`, where
-   - `<n>` starts at 1, and is incremented if multiple images need to be published the same day)
-   - `<flavor>` is `jdk21` or `jdk11`
+    - `<n>` starts at 1, and is incremented if multiple images need to be published the same day)
+    - `<flavor>` is one of: `jdk21`, `jdk11`, `jdk8`, `slim`
 3. Push the Git tag to the official repo (`apache/ozone-docker-runner`).  This will trigger a workflow to apply the tag to the Docker image.
-4. If the change is relevant for Ozone 1.x versions, cherry-pick it to the `jdk11` branch.
-5. Set `Fix Version` of the Jira issue to `runner-<date>-<n>-<flavor>`
+4. Set `Fix Version` of the Jira issue to `runner-<date>-<n>-<flavor>`
+
+## Updating Variants
+
+1. Cherry-pick changes from `master` to other variants:
+    - If the change is relevant for Ozone 1.x versions, cherry-pick it to the `jdk11` branch.
+    - If the change is not restricted to server-side components, cherry-pick it to the `jdk8` branch.
+    - If the change is not restricted to dev/test tools, cherry-pick it to the `slim` branch.
+2. Push the branch to your fork
+3. If CI in your fork passes, push the same branch to `apache/ozone-docker-runner`
+4. Tag commits as described earlier.
