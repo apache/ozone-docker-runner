@@ -68,20 +68,6 @@ RUN set -eux ; \
     chmod +x dumb-init ; \
     mv dumb-init /usr/local/bin/dumb-init
 
-# Hadoop native libary
-RUN set -eux ; \
-    ARCH="$(arch)" ; \
-    hadoop_version=3.4.2 ; \
-    case "${ARCH}" in \
-        x86_64)  file=hadoop-${hadoop_version}-lean.tar.gz ;; \
-        aarch64) file=hadoop-${hadoop_version}-aarch64-lean.tar.gz ;; \
-        *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
-    esac; \
-    curl -L "https://www.apache.org/dyn/closer.lua?action=download&filename=hadoop/common/hadoop-${hadoop_version}/$file" -o "hadoop-${hadoop_version}.tar.gz" && \
-    tar xzvf hadoop-${hadoop_version}.tar.gz -C /usr/lib --strip-components 3 "hadoop-${hadoop_version}/lib/native/libhadoop.*" && \
-    chown --no-dereference root:root /usr/lib/libhadoop* && \
-    rm -f hadoop-${hadoop_version}.tar.gz
-
 ENV JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk
 ENV PATH=/opt/hadoop/libexec:$PATH:$JAVA_HOME/bin:/opt/hadoop/bin
 
