@@ -67,7 +67,7 @@ To run complete Ozone CI with the custom image:
 1. Fetch changes to your local clone.
 2. Add a Git tag for the commit following the existing pattern `<date>-<n>-<flavor>`, where
     - `<n>` starts at 1, and is incremented if multiple images need to be published the same day)
-    - `<flavor>` is one of: `jdk21`, `jdk11`, `jdk8`, `slim`
+    - `<flavor>` is one of: `jdk25`, `jdk21`, `jdk11`, `jdk8`, `slim`
 3. Push the Git tag to the official repo (`apache/ozone-docker-runner`).  This will trigger a workflow to apply the tag to the Docker image.
 4. Set `Fix Version` of the Jira issue to `runner-<date>-<n>-<flavor>`
 
