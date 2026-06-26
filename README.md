@@ -21,4 +21,4 @@
 
 Published to [Docker Hub](https://hub.docker.com/r/apache/ozone-runner) and [GitHub](https://github.com/apache/ozone-docker-runner/pkgs/container/ozone-runner).
 
-Images are tagged by date, and come in two flavors: `jdk21` (for Ozone 2.0+) and `jdk11` (for Ozone 1.x).
+Images are tagged by date, and come in flavors based on JDK version.
