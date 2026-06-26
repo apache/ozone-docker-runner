@@ -14,12 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Security update RHSA-2026:0067 breaks tar on arm64.
-# Remove exclusion if package newer than tar-1.34-9.el9_7 is available (and works OK)
 FROM rockylinux/rockylinux:9
 RUN set -eux ; \
     dnf upgrade -y \
-      --exclude tar \
     && dnf install -y \
       bzip2 \
       diffutils \
