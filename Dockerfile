@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.17.8-buster AS go
-RUN go install github.com/rexray/gocsi/csc@latest
+FROM golang:1.26-bookworm AS go
+RUN go install github.com/rexray/gocsi/csc@v1.2.2
 
 FROM rockylinux/rockylinux:9
 RUN set -eux ; \
