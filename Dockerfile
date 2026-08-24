@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.26-bookworm AS go
-RUN go install github.com/rexray/gocsi/csc@v1.2.2
-
 FROM rockylinux/rockylinux:9
 RUN set -eux ; \
     dnf upgrade -y \
@@ -41,9 +38,6 @@ RUN set -eux ; \
     && dnf clean all \
     && ln -sf /usr/bin/python3 /usr/bin/python
 RUN python3 -m pip install --upgrade pip
-
-# CSI / k8s dependency
-COPY --from=go /go/bin/csc /usr/bin/csc
 
 # Install rclone for smoketest
 ARG RCLONE_VERSION=1.69.3
