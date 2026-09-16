@@ -77,6 +77,23 @@ RUN set -eux ; \
     pip3 install awscli==1.38.15 robotframework==6.1.1 boto3==1.37.15 ; \
     rm -r ~/.cache/pip
 
+# AWS CLI v2 for smoketest (separate from v1, do not overwrite `aws`)
+ARG AWS_CLI_V2_VERSION=2.27.50
+RUN set -eux ; \
+    ARCH="$(arch)"; \
+    case "${ARCH}" in \
+        x86_64)  arch='x86_64' ;; \
+        aarch64) arch='aarch64' ;; \
+        *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
+    esac; \
+    curl -L "https://awscli.amazonaws.com/awscli-exe-linux-${arch}-${AWS_CLI_V2_VERSION}.zip" -o awscliv2.zip ; \
+    unzip -q awscliv2.zip ; \
+    ./aws/install -i /usr/local/aws-cli/v2 -b /usr/local/aws-cli/v2/bin ; \
+    ln -sf /usr/local/aws-cli/v2/bin/aws /usr/local/bin/aws2 ; \
+    rm -rf aws awscliv2.zip ; \
+    aws --version ; \
+    aws2 --version
+
 #dumb init for proper init handling
 RUN set -eux ; \
     ARCH="$(arch)"; \
