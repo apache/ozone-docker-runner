@@ -74,11 +74,13 @@ RUN set -eux ; \
 
 #For executing inline smoketest
 RUN set -eux ; \
-    pip3 install awscli==1.38.15 robotframework==6.1.1 boto3==1.37.15 ; \
+    pip3 install robotframework==6.1.1 boto3==1.37.15 ; \
     rm -r ~/.cache/pip
 
-# AWS CLI v2 for smoketest (separate from v1, do not overwrite `aws`)
+# AWS CLI v2 for smoketest, as both `aws` and `aws2` (AWS CLI v1 is end of life)
 ARG AWS_CLI_V2_VERSION=2.27.50
+# never page output in tests
+ENV AWS_PAGER=""
 RUN set -eux ; \
     ARCH="$(arch)"; \
     case "${ARCH}" in \
@@ -89,9 +91,10 @@ RUN set -eux ; \
     curl -L "https://awscli.amazonaws.com/awscli-exe-linux-${arch}-${AWS_CLI_V2_VERSION}.zip" -o awscliv2.zip ; \
     unzip -q awscliv2.zip ; \
     ./aws/install -i /usr/local/aws-cli/v2 -b /usr/local/aws-cli/v2/bin ; \
+    ln -sf /usr/local/aws-cli/v2/bin/aws /usr/local/bin/aws ; \
     ln -sf /usr/local/aws-cli/v2/bin/aws /usr/local/bin/aws2 ; \
     rm -rf aws awscliv2.zip ; \
-    aws --version ; \
+    aws --version 2>&1 | grep '^aws-cli/2\.' ; \
     aws2 --version
 
 #dumb init for proper init handling
