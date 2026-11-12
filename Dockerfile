@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.26-bookworm AS go
-RUN go install github.com/rexray/gocsi/csc@v1.2.2
-
 FROM rockylinux/rockylinux:9
 RUN set -eux ; \
     dnf upgrade -y \
@@ -24,7 +21,6 @@ RUN set -eux ; \
       bzip2 \
       diffutils \
       findutils \
-      fuse \
       jq \
       krb5-workstation \
       libxcrypt-compat \
@@ -42,21 +38,6 @@ RUN set -eux ; \
     && dnf clean all \
     && ln -sf /usr/bin/python3 /usr/bin/python
 RUN python3 -m pip install --upgrade pip
-
-# CSI / k8s / fuse / goofys dependency
-COPY --from=go /go/bin/csc /usr/bin/csc
-# S3 FUSE support - mountpoint-s3
-ARG MOUNTPOINT_S3_VERSION=1.19.0
-RUN set -eux ; \
-    ARCH="$(arch)"; \
-    case "${ARCH}" in \
-        x86_64)  arch='x86_64' ;; \
-        aarch64) arch='arm64' ;; \
-        *) echo "Unsupported architecture: ${ARCH}"; exit 1 ;; \
-    esac; \
-    curl -L "https://s3.amazonaws.com/mountpoint-s3-release/${MOUNTPOINT_S3_VERSION}/${arch}/mount-s3-${MOUNTPOINT_S3_VERSION}-${arch}.rpm" -o mount-s3.rpm ; \
-    dnf install -y mount-s3.rpm ; \
-    rm -f mount-s3.rpm
 
 # Install rclone for smoketest
 ARG RCLONE_VERSION=1.69.3
